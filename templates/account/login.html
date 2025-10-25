@@ -1,12 +1,34 @@
 {% extends "base.html" %}
 {% block title %}Вход{% endblock %}
 {% block content %}
-  <div class="card" style="max-width:420px">
+  <div class="card auth">
     <h2>Вход</h2>
-    <form method="post" action="{% url 'account_login' %}">{% csrf_token %}
-      {{ form.as_p }}
-      <button class="btn primary" type="submit">Войти</button>
+    <form method="post" action="{% url 'account_login' %}" class="form">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div class="row">
+        <label for="{{ form.login.id_for_label }}">Email</label>
+        {{ form.login }}
+        {{ form.login.errors }}
+      </div>
+      <div class="row">
+        <label for="{{ form.password.id_for_label }}">Пароль</label>
+        {{ form.password }}
+        <div class="muted" style="font-size:13px">
+          <a href="{% url 'account_reset_password' %}">Забыли пароль?</a>
+        </div>
+        {{ form.password.errors }}
+      </div>
+      <div class="actions">
+        <div class="inline">
+          {{ form.remember }} <span class="muted" style="font-size:14px">Запомнить меня</span>
+        </div>
+        <button class="btn primary" type="submit">Войти</button>
+      </div>
     </form>
-    <p class="muted">Нет аккаунта? <a href="{% url 'account_signup' %}">Регистрация</a></p>
+    <p class="muted" style="margin-top:12px">Нет аккаунта?
+      <a href="{% url 'account_signup' %}">Регистрация</a>
+    </p>
   </div>
 {% endblock %}
+
