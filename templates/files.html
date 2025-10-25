@@ -1,8 +1,57 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %}Мои файлы{% endblock %}
 {% block content %}
-  <div class="card">
-    <h2>Мои файлы</h2>
-    <p class="muted">Тут будет список загрузок и кнопка «Загрузить». Пока это заглушка, но доступ только для вошедших.</p>
-  </div>
+<div class="files-layout">
+  <aside class="sidebar">
+    <div class="usage">
+      <div class="usage-top">
+        <div>Хранилище</div>
+        <div class="muted">{{ used|filesizeformat }} / {{ quota|filesizeformat }}</div>
+      </div>
+      <div class="bar">
+        <div class="bar-fill" style="width: {{ percent }}%"></div>
+      </div>
+      {% if user.is_subscribed %}
+        <div class="plan good">Подписка активна</div>
+      {% else %}
+        <div class="plan bad">Нет подписки</div>
+        <a class="btn primary" href="#">Оформить</a>
+      {% endif %}
+    </div>
+
+    <nav class="menu">
+      <a class="menu-item active" href="{% url 'files' %}">Файлы</a>
+      <a class="menu-item" href="#">Последние</a>
+      <a class="menu-item" href="#">Альбомы</a>
+      <a class="menu-item" href="#">Общий доступ</a>
+      <a class="menu-item" href="#">Корзина</a>
+    </nav>
+  </aside>
+
+  <section class="board">
+    <div class="board-top">
+      <h2>Недавние</h2>
+      {% if user.is_subscribed %}
+        <a class="btn primary" href="#">Загрузить</a>
+      {% else %}
+        <a class="btn" href="#">Только с подпиской</a>
+      {% endif %}
+    </div>
+
+    {% if recent %}
+      <div class="grid">
+        {% for f in recent %}
+          <a class="tile" href="{{ f.file.url }}">
+            <div class="tile-thumb">{{ f.name|slice:":1"|upper }}</div>
+            <div class="tile-name">{{ f.name }}</div>
+            <div class="tile-meta">{{ f.size|filesizeformat }} · {{ f.uploaded_at|date:"d.m.Y H:i" }}</div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="tile muted">Здесь появятся ваши файлы.</div>
+    {% endif %}
+  </section>
+</div>
 {% endblock %}
