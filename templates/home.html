@@ -1,50 +1,112 @@
 {% extends "base.html" %}
-{% block title %}Ваши файлы всегда под рукой{% endblock %}
+{% block title %}CloudAnywhere — мини-облако{% endblock %}
+
 {% block content %}
-  <section class="hero">
-    <div>
-      <h1>Храни файлы просто.<br/>Доступ с любого устройства.</h1>
-      <p>Загружай, делись ссылкой, работай из дома, универа и маршрутки. Без танцев с архивами и флешками.</p>
 
-      {% if not user.is_authenticated %}
-        <p><a class="btn primary" href="{% url 'account_signup' %}">Создать аккаунт</a>
-           <a class="btn" href="{% url 'account_login' %}">Войти</a></p>
-      {% endif %}
-    </div>
-  </section>
+<style>
+  .home-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
 
-  <section class="showcase">
-    <div class="card preview-card" aria-label="Превью интерфейса">
-      <div style="height:100%;display:grid;place-items:center;color:#8ab4f8">
-        <svg width="280" height="140" viewBox="0 0 280 140">
-          <defs><linearGradient id="g2" x1="0" x2="1">
-            <stop offset="0" stop-color="#2a7bf6"/><stop offset="1" stop-color="#7cb2ff"/>
-          </linearGradient></defs>
-          <path d="M40 100 Q80 30 150 55 Q210 35 240 75 Q260 95 260 110 Q260 125 40 125 Z"
-                fill="url(#g2)" opacity=".25"/>
-          <circle cx="95" cy="90" r="16" fill="url(#g2)">
-            <animate attributeName="cy" values="88;94;88" dur="2.2s" repeatCount="indefinite"/>
-          </circle>
-          <rect x="130" y="78" rx="8" ry="8" width="100" height="48" fill="none" stroke="#7aa2ff"/>
-        </svg>
-        <div style="color:#9aa0a6;font-size:12px;margin-top:8px">Превью. Позже добавим реальные скриншоты.</div>
-      </div>
-    </div>
+  .hero {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 360px;
+  }
 
-    <div class="stack">
-      <div class="card">
-        <h3>Быстрая загрузка</h3>
-        <p class="muted">Файлы любой величины, без ограничений. Всё просто.</p>
-      </div>
-      <div class="card">
-        <h3>Ссылки для доступа</h3>
-        <p class="muted">Поделиться можно в один клик. Приватные ссылки — скоро.</p>
-      </div>
-      <div class="card">
-        <h3>Безопасность</h3>
-        <p class="muted">Авторизация, сессии, потом S3 и подписанные URL. Без цирка.</p>
-      </div>
+  .hero h1 {
+    font-size: 34px;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  .hero p.lead {
+    color: #9aa4b2;
+    margin-bottom: 16px;
+  }
+
+  .cta {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .preview {
+    height: 300px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #111621;
+    display: grid;
+    place-items: center;
+    color: #8b98a6;
+    font-size: 14px;
+  }
+
+  .grid3 {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .feature {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .feature h3 {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  @media (max-width: 900px) {
+    .home-wrap {
+      grid-template-columns: 1fr;
+    }
+    .hero {
+      order: 2;
+    }
+  }
+</style>
+
+<div class="home-wrap">
+  <div class="hero">
+    <h1>Храни файлы просто.<br>Доступ с любого устройства.</h1>
+    <p class="lead">
+      Загружай, делись ссылкой, работай из дома, универа и маршрутки. Без танцев с архивами и флешками.
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="{% url 'account_signup' %}">Создать аккаунт</a>
+      <a class="btn" href="{% url 'account_login' %}">Войти</a>
     </div>
-  </section>
+    <div class="preview">Превью. Позже добавим реальные скриншоты.</div>
+  </div>
+
+  <div class="grid3">
+    <div class="feature">
+      <h3>Быстрая загрузка</h3>
+      <p>Файлы любой величины, без ограничений. Всё просто.</p>
+    </div>
+    <div class="feature">
+      <h3>Ссылки для доступа</h3>
+      <p>Поделиться можно в один клик. Приватные ссылки — скоро.</p>
+    </div>
+    <div class="feature">
+      <h3>Безопасность</h3>
+      <p>Авторизация, сессии, потом S3 и подписанные URL. Без цирка.</p>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
-

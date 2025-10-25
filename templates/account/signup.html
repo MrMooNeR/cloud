@@ -1,32 +1,51 @@
 {% extends "base.html" %}
 {% block title %}Регистрация{% endblock %}
+
 {% block content %}
-  <div class="card auth">
-    <h2>Создать аккаунт</h2>
-    <form method="post" action="{% url 'account_signup' %}" class="form">
+<style>
+  .auth-wrap{display:grid;place-items:start;max-width:760px;margin:0 auto}
+  .auth-card{width:560px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+  .row{display:grid;gap:6px;margin-bottom:12px}
+  label{font-size:13px;color:#9aa4b2}
+  input[type="email"],input[type="text"],input[type="password"]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#0f141d;color:#e5e7eb}
+  .errors{color:#ffb4b4;font-size:13px}
+  .muted{color:#8b98a6;font-size:13px}
+  .link{color:#9bb1ff}
+</style>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <h2 style="margin-bottom:10px">Создать аккаунт</h2>
+
+    <form method="post" action="">
       {% csrf_token %}
-      {{ form.non_field_errors }}
+      {{ form.non_field_errors|default_if_none:"" }}
+
       <div class="row">
         <label for="{{ form.email.id_for_label }}">Email</label>
         {{ form.email }}
         {{ form.email.errors }}
       </div>
+
       <div class="row">
         <label for="{{ form.password1.id_for_label }}">Пароль</label>
         {{ form.password1 }}
         {{ form.password1.errors }}
       </div>
+
       <div class="row">
         <label for="{{ form.password2.id_for_label }}">Повторите пароль</label>
         {{ form.password2 }}
         {{ form.password2.errors }}
       </div>
-      <div class="actions">
-        <button class="btn primary" type="submit">Создать</button>
-      </div>
+
+      <button class="btn primary" type="submit">Создать</button>
     </form>
-    <p class="muted" style="margin-top:12px">Уже есть аккаунт?
-      <a href="{% url 'account_login' %}">Войти</a>
-    </p>
+
+    <div class="muted" style="margin-top:14px">
+      Уже есть аккаунт?
+      <a class="link" href="{% url 'account_login' %}">Войти</a>
+    </div>
   </div>
+</div>
 {% endblock %}

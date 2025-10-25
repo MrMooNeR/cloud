@@ -1,20 +1,19 @@
 {% extends "base.html" %}
 {% load humanize %}
 {% block title %}Мои файлы{% endblock %}
-
+{% block main_mod %}wide{% endblock %}
 {% block content %}
 
-<!-- Локальные стили для контекстного меню и выравнивания сетки -->
 <style>
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
-  .tile{display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}
+  .tile{display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;cursor:pointer}
+  .tile:hover{border-color:#2b3240}
   .tile-thumb{position:relative;height:150px;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:grid;place-items:center;background:#0f141d}
   .tile-thumb img,.tile-thumb video{width:100%;height:100%;object-fit:cover;display:block}
   .tile-thumb .badge{font-weight:700;color:#8ab4f8;border:1px dashed var(--line);padding:6px 10px;border-radius:8px;background:#0f141d}
   .tile-name{margin-top:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tile-meta{font-size:12px;color:#9aa4b2}
 
-  /* контекстное меню */
   .ctx{position:fixed;z-index:1000;display:none;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.3);padding:6px}
   .ctx.open{display:block}
   .ctx-item{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:#d7dbe3;cursor:pointer}
@@ -22,6 +21,20 @@
   .ctx-item[aria-disabled="true"]{opacity:.5;cursor:default}
   .ctx-sep{height:1px;background:var(--line);margin:6px 0}
   .ctx-kbd{margin-left:auto;font-size:11px;color:#8b98a6}
+
+  .files-layout{display:grid;grid-template-columns:280px 1fr;gap:20px}
+  .usage{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:10px}
+  .usage-top{display:flex;justify-content:space-between;align-items:center}
+  .bar{height:10px;background:#121722;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .bar-fill{height:100%;background:var(--acc)}
+  .plan.good{color:#7ddc86;font-size:13px}
+  .plan.bad{color:#f4a261;font-size:13px}
+  .menu{display:flex;flex-direction:column;gap:4px}
+  .menu-item{padding:10px 12px;border-radius:10px;color:#ddd}
+  .menu-item:hover{background:#141a24}
+  .menu-item.active{background:#151a23;border:1px solid var(--line)}
+  .board{display:flex;flex-direction:column;gap:16px}
+  .board-top{display:flex;justify-content:space-between;align-items:center}
 </style>
 
 <div class="files-layout">
@@ -65,7 +78,9 @@
           <div class="tile"
                data-id="{{ f.pk }}"
                data-name="{{ f.name }}"
-               data-download="{% url 'download' f.pk %}">
+               data-view="{{ f.file.url }}"
+               data-download="{% url 'download' f.pk %}"
+               data-kind="{% if f.is_image %}image{% elif f.is_video %}video{% elif f.is_pdf %}pdf{% else %}other{% endif %}">
             <div class="tile-thumb">
               {% if f.is_image %}
                 <img loading="lazy" src="{{ f.file.url }}" alt="{{ f.name }}">
@@ -88,7 +103,6 @@
   </section>
 </div>
 
-<!-- Контекстное меню -->
 <div class="ctx" id="ctxMenu" role="menu" aria-hidden="true">
   <div class="ctx-item" data-action="share">Поделиться <span class="ctx-kbd">скоро</span></div>
   <div class="ctx-item" data-action="album">Добавить в альбом <span class="ctx-kbd">скоро</span></div>
@@ -103,56 +117,32 @@
 
 <script>
 (function(){
-  const grid = document.getElementById('fileGrid');
-  const menu = document.getElementById('ctxMenu');
-  let current = null;
+  const grid=document.getElementById('fileGrid'), menu=document.getElementById('ctxMenu');
+  let current=null;
+  function hide(){menu.classList.remove('open');menu.setAttribute('aria-hidden','true');current=null}
+  function show(x,y){menu.style.left=Math.min(x,innerWidth-menu.offsetWidth-8)+'px';menu.style.top=Math.min(y,innerHeight-menu.offsetHeight-8)+'px';menu.classList.add('open');menu.setAttribute('aria-hidden','false')}
 
-  function hide(){ menu.classList.remove('open'); menu.setAttribute('aria-hidden','true'); current = null; }
-  function show(x,y){
-    menu.style.left = Math.min(x, window.innerWidth - menu.offsetWidth - 8) + 'px';
-    menu.style.top  = Math.min(y, window.innerHeight - menu.offsetHeight - 8) + 'px';
-    menu.classList.add('open'); menu.setAttribute('aria-hidden','false');
-  }
-
-  // ПКМ на плитке
-  grid.addEventListener('contextmenu', (e)=>{
-    const tile = e.target.closest('.tile');
-    if(!tile) return;
-    e.preventDefault();
-    current = tile;
-    show(e.clientX, e.clientY);
+  grid.addEventListener('click',e=>{
+    const tile=e.target.closest('.tile'); if(!tile) return;
+    const kind=tile.dataset.kind, view=tile.dataset.view, dl=tile.dataset.download;
+    const url=(kind==='image'||kind==='video'||kind==='pdf')?view:dl;
+    if(e.metaKey||e.ctrlKey) window.open(url,'_blank'); else location=url;
   });
 
-  // Клик по пунктам меню
-  menu.addEventListener('click', (e)=>{
-    const item = e.target.closest('.ctx-item');
-    if(!item || item.getAttribute('aria-disabled') === 'true' || !current) return;
-    const action = item.dataset.action;
-    const name = current.dataset.name;
-    const download = current.dataset.download;
-
-    switch(action){
-      case 'download':
-        window.location = download;
-        break;
-      case 'share':
-      case 'album':
-      case 'rename':
-      case 'move':
-      case 'copy':
-      case 'delete':
-      case 'history':
-        alert('Функция «' + action + '» появится позже.');
-        break;
-    }
-    hide();
+  grid.addEventListener('contextmenu',e=>{
+    const tile=e.target.closest('.tile'); if(!tile) return;
+    e.preventDefault(); current=tile; show(e.clientX,e.clientY);
   });
 
-  // Закрытие по клику снаружи/скроллу/Esc
-  document.addEventListener('click', (e)=>{ if(!menu.contains(e.target)) hide(); });
-  window.addEventListener('scroll', hide, true);
-  window.addEventListener('resize', hide);
-  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') hide(); });
+  menu.addEventListener('click',e=>{
+    const item=e.target.closest('.ctx-item'); if(!item||item.getAttribute('aria-disabled')==='true'||!current) return;
+    const action=item.dataset.action; const dl=current.dataset.download;
+    if(action==='download') location=dl; else alert('Функция «'+action+'» появится позже.'); hide();
+  });
+
+  addEventListener('click',e=>{ if(!menu.contains(e.target)) hide(); });
+  addEventListener('scroll',hide,true); addEventListener('resize',hide);
+  addEventListener('keydown',e=>{ if(e.key==='Escape') hide(); });
 })();
 </script>
 

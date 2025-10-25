@@ -5,189 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}CloudAnywhere{% endblock %}</title>
   <style>
-    :root {
-      --bg: #0d1117;
-      --card: #161b22;
-      --line: #262c36;
-      --acc: #3b82f6;
-      color-scheme: dark;
+    :root{
+      --bg:#0d1117; --card:#161b22; --line:#262c36; --acc:#3b82f6;
+      color-scheme:dark;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: #d1d5db;
-      font-family: system-ui, sans-serif;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100vh; display:flex; flex-direction:column;
+      background:var(--bg); color:#d1d5db; font-family:system-ui,sans-serif;
     }
-    a { color: #9bb1ff; text-decoration: none; }
-    a:hover { color: #b5c6ff; }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 28px;
-      border-bottom: 1px solid var(--line);
-    }
-    .brand a { font-weight: 700; font-size: 16px; color: #fff; }
-    .btn {
-      background: transparent;
-      border: 1px solid var(--line);
-      color: #d1d5db;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .btn.primary { background: var(--acc); border: none; color: #fff; }
-    .btn:hover { opacity: 0.85; }
+    a{color:#9bb1ff; text-decoration:none} a:hover{color:#b5c6ff}
+    .btn{background:transparent;border:1px solid var(--line);color:#d1d5db;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+    .btn.primary{background:var(--acc);border:none;color:#fff}.btn:hover{opacity:.9}
 
-    main {
-      flex: 1 0 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      width: 100%;
-      height: 100%;
-    }
+    header{display:flex;justify-content:space-between;align-items:center;padding:12px 28px;border-bottom:1px solid var(--line)}
+    .brand a{font-weight:700;color:#fff}
 
-    footer {
-      border-top: 1px solid var(--line);
-      text-align: center;
-      padding: 12px;
-      color: #666;
-      font-size: 13px;
-    }
+    /* Контейнер страницы:
+       по умолчанию узкий (лендинг),
+       страница может попросить .wide */
+    main.wrap{flex:1 0 auto; width:100%; max-width:1040px; margin:0 auto; padding:32px 18px}
+    main.wrap.wide{max-width:1320px}
+    @media (min-width:1600px){ main.wrap.wide{max-width:1440px} }
 
-    /* user menu */
-    .userbox { position: relative; display: inline-block; }
-    .avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: var(--card);
-      border: 1px solid var(--line);
-      color: #9bb1ff;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .dropdown {
-      position: absolute;
-      right: 0; top: 44px;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      min-width: 200px;
-      padding: 6px;
-      display: none;
-      z-index: 50;
-    }
-    .dropdown.open { display: block; }
-    .dropdown-item {
-      display: block;
-      padding: 10px 12px;
-      border-radius: 8px;
-      color: #ddd;
-    }
-    .dropdown-item:hover { background: #1b2230; }
-    .dropdown-sep { height: 1px; background: var(--line); margin: 6px 0; }
-
-    /* layout */
-    .wrap {
-      flex: 1;
-      width: 100%;
-      padding: 32px 48px;
-    }
-
-    /* files dashboard */
-    .files-layout {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 20px;
-      width: 100%;
-      height: 100%;
-    }
-    .sidebar { display: flex; flex-direction: column; gap: 16px; }
-    .usage {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 16px;
-      display: grid;
-      gap: 10px;
-    }
-    .usage-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .bar {
-      height: 10px;
-      background: #121722;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 100%;
-      background: var(--acc);
-      transition: width .2s;
-    }
-    .plan.good { color: #7ddc86; font-size: 13px; }
-    .plan.bad { color: #f4a261; font-size: 13px; }
-
-    .menu { display: flex; flex-direction: column; gap: 4px; }
-    .menu-item {
-      padding: 10px 12px;
-      border-radius: 10px;
-      color: #ddd;
-    }
-    .menu-item:hover { background: #141a24; }
-    .menu-item.active {
-      background: #151a23;
-      border: 1px solid var(--line);
-    }
-
-    .board {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      width: 100%;
-    }
-    .board-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 14px;
-    }
-    .tile {
-      display: block;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px;
-    }
-    .tile-thumb{position:relative;height:140px;border:1px solid var(--line);border-radius:10px;overflow:hidden;display:grid;place-items:center;background:#0f141d}
-    .tile-thumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .tile-thumb video{width:100%;height:100%;object-fit:cover;border:0;outline:0}
-    .tile-thumb .badge{
-      font-weight:700;color:#8ab4f8;border:1px dashed var(--line);
-      padding:6px 10px;border-radius:8px;background:#0f141d
-    }
-    .tile-name {
-      margin-top: 10px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .tile-meta { font-size: 12px; color: #999; }
-
+    footer{border-top:1px solid var(--line); text-align:center; padding:12px; color:#778}
     .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
-
+    .muted{color:#98a2b3}
+    /* user menu */
+    .userbox{position:relative;display:inline-block}
+    .avatar{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--line);color:#9bb1ff;font-weight:700;cursor:pointer}
+    .dropdown{position:absolute;right:0;top:44px;background:var(--card);border:1px solid var(--line);border-radius:12px;min-width:200px;padding:6px;display:none;z-index:50}
+    .dropdown.open{display:block}
+    .dropdown-item{display:block;padding:10px 12px;border-radius:8px;color:#ddd}
+    .dropdown-item:hover{background:#1b2230}.dropdown-sep{height:1px;background:var(--line);margin:6px 0}
   </style>
 </head>
 <body>
@@ -201,8 +51,7 @@
             <div class="dropdown-item muted">{{ user.email }}</div>
             <a class="dropdown-item" href="{% url 'files' %}">Мои файлы</a>
             <div class="dropdown-sep"></div>
-            <form method="post" action="{% url 'account_logout' %}">
-              {% csrf_token %}
+            <form method="post" action="{% url 'account_logout' %}">{% csrf_token %}
               <button class="dropdown-item" type="submit">Выйти</button>
             </form>
           </div>
@@ -214,32 +63,30 @@
     </nav>
   </header>
 
-  <main class="wrap">
+  <main class="wrap {% block main_mod %}{% endblock %}">
+    {% if messages %}
+  <div style="margin:0 0 12px;display:grid;gap:8px">
+    {% for m in messages %}
+      <div class="card"
+           style="border-color:{% if m.tags == 'success' %}#234d2a{% else %}#503131{% endif %};
+                  background:{% if m.tags == 'success' %}#122016{% else %}#241617{% endif %}">
+        {{ m }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
     {% block content %}{% endblock %}
   </main>
 
-  {% if messages %}
-    <div style="margin:0 0 12px 0;display:grid;gap:8px">
-      {% for m in messages %}
-        <div class="card" style="border-color: {% if m.tags == 'success' %}#234d2a{% else %}#503131{% endif %}; background: {% if m.tags == 'success' %}#122016{% else %}#241617{% endif %}; color:#ddd">
-          {{ m }}
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
-
-
-  <footer>
-    © CloudAnywhere. Мини-облако для людей, уставших от флешек.
-  </footer>
+  <footer>© CloudAnywhere. Мини-облако для людей, уставших от флешек.</footer>
 
   <script>
-    document.addEventListener('click', e => {
-      const b = document.getElementById('avatarBtn'),
-            m = document.getElementById('userMenu');
-      if (!b || !m) return;
-      if (e.target === b) { m.classList.toggle('open'); return; }
-      if (!m.contains(e.target)) m.classList.remove('open');
+    document.addEventListener('click', e=>{
+      const b=document.getElementById('avatarBtn'), m=document.getElementById('userMenu');
+      if(!b||!m) return;
+      if(e.target===b){ m.classList.toggle('open'); return; }
+      if(!m.contains(e.target)) m.classList.remove('open');
     });
   </script>
 </body>
