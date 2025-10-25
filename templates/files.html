@@ -1,7 +1,29 @@
 {% extends "base.html" %}
 {% load humanize %}
 {% block title %}Мои файлы{% endblock %}
+
 {% block content %}
+
+<!-- Локальные стили для контекстного меню и выравнивания сетки -->
+<style>
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+  .tile{display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}
+  .tile-thumb{position:relative;height:150px;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:grid;place-items:center;background:#0f141d}
+  .tile-thumb img,.tile-thumb video{width:100%;height:100%;object-fit:cover;display:block}
+  .tile-thumb .badge{font-weight:700;color:#8ab4f8;border:1px dashed var(--line);padding:6px 10px;border-radius:8px;background:#0f141d}
+  .tile-name{margin-top:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tile-meta{font-size:12px;color:#9aa4b2}
+
+  /* контекстное меню */
+  .ctx{position:fixed;z-index:1000;display:none;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.3);padding:6px}
+  .ctx.open{display:block}
+  .ctx-item{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:#d7dbe3;cursor:pointer}
+  .ctx-item:hover{background:#17202b}
+  .ctx-item[aria-disabled="true"]{opacity:.5;cursor:default}
+  .ctx-sep{height:1px;background:var(--line);margin:6px 0}
+  .ctx-kbd{margin-left:auto;font-size:11px;color:#8b98a6}
+</style>
+
 <div class="files-layout">
   <aside class="sidebar">
     <div class="usage">
@@ -9,9 +31,7 @@
         <div>Хранилище</div>
         <div class="muted">{{ used|filesizeformat }} / {{ quota|filesizeformat }}</div>
       </div>
-      <div class="bar">
-        <div class="bar-fill" style="width: {{ percent }}%"></div>
-      </div>
+      <div class="bar"><div class="bar-fill" style="width: {{ percent }}%"></div></div>
       {% if user.is_subscribed %}
         <div class="plan good">Подписка активна</div>
       {% else %}
@@ -33,20 +53,33 @@
     <div class="board-top">
       <h2>Недавние</h2>
       {% if user.is_subscribed %}
-        <a class="btn primary" href="#">Загрузить</a>
+        <a class="btn primary" href="{% url 'upload' %}">Загрузить</a>
       {% else %}
         <a class="btn" href="#">Только с подпиской</a>
       {% endif %}
     </div>
 
     {% if recent %}
-      <div class="grid">
+      <div class="grid" id="fileGrid">
         {% for f in recent %}
-          <a class="tile" href="{{ f.file.url }}">
-            <div class="tile-thumb">{{ f.name|slice:":1"|upper }}</div>
+          <div class="tile"
+               data-id="{{ f.pk }}"
+               data-name="{{ f.name }}"
+               data-download="{% url 'download' f.pk %}">
+            <div class="tile-thumb">
+              {% if f.is_image %}
+                <img loading="lazy" src="{{ f.file.url }}" alt="{{ f.name }}">
+              {% elif f.is_video %}
+                <div class="badge">VIDEO</div>
+              {% elif f.is_pdf %}
+                <div class="badge">PDF</div>
+              {% else %}
+                <div class="badge">{{ f.name|slice:":1"|upper }}</div>
+              {% endif %}
+            </div>
             <div class="tile-name">{{ f.name }}</div>
             <div class="tile-meta">{{ f.size|filesizeformat }} · {{ f.uploaded_at|date:"d.m.Y H:i" }}</div>
-          </a>
+          </div>
         {% endfor %}
       </div>
     {% else %}
@@ -54,4 +87,73 @@
     {% endif %}
   </section>
 </div>
+
+<!-- Контекстное меню -->
+<div class="ctx" id="ctxMenu" role="menu" aria-hidden="true">
+  <div class="ctx-item" data-action="share">Поделиться <span class="ctx-kbd">скоро</span></div>
+  <div class="ctx-item" data-action="album">Добавить в альбом <span class="ctx-kbd">скоро</span></div>
+  <div class="ctx-item" data-action="download">Скачать</div>
+  <div class="ctx-item" data-action="rename">Переименовать <span class="ctx-kbd">скоро</span></div>
+  <div class="ctx-item" data-action="move">Переместить <span class="ctx-kbd">скоро</span></div>
+  <div class="ctx-item" data-action="copy">Копировать <span class="ctx-kbd">скоро</span></div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" data-action="history" aria-disabled="true">История изменений</div>
+  <div class="ctx-item" data-action="delete">Удалить <span class="ctx-kbd">скоро</span></div>
+</div>
+
+<script>
+(function(){
+  const grid = document.getElementById('fileGrid');
+  const menu = document.getElementById('ctxMenu');
+  let current = null;
+
+  function hide(){ menu.classList.remove('open'); menu.setAttribute('aria-hidden','true'); current = null; }
+  function show(x,y){
+    menu.style.left = Math.min(x, window.innerWidth - menu.offsetWidth - 8) + 'px';
+    menu.style.top  = Math.min(y, window.innerHeight - menu.offsetHeight - 8) + 'px';
+    menu.classList.add('open'); menu.setAttribute('aria-hidden','false');
+  }
+
+  // ПКМ на плитке
+  grid.addEventListener('contextmenu', (e)=>{
+    const tile = e.target.closest('.tile');
+    if(!tile) return;
+    e.preventDefault();
+    current = tile;
+    show(e.clientX, e.clientY);
+  });
+
+  // Клик по пунктам меню
+  menu.addEventListener('click', (e)=>{
+    const item = e.target.closest('.ctx-item');
+    if(!item || item.getAttribute('aria-disabled') === 'true' || !current) return;
+    const action = item.dataset.action;
+    const name = current.dataset.name;
+    const download = current.dataset.download;
+
+    switch(action){
+      case 'download':
+        window.location = download;
+        break;
+      case 'share':
+      case 'album':
+      case 'rename':
+      case 'move':
+      case 'copy':
+      case 'delete':
+      case 'history':
+        alert('Функция «' + action + '» появится позже.');
+        break;
+    }
+    hide();
+  });
+
+  // Закрытие по клику снаружи/скроллу/Esc
+  document.addEventListener('click', (e)=>{ if(!menu.contains(e.target)) hide(); });
+  window.addEventListener('scroll', hide, true);
+  window.addEventListener('resize', hide);
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') hide(); });
+})();
+</script>
+
 {% endblock %}
