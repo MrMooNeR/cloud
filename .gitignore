@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+*.log
+.env
+.venv/
+db.sqlite3
+/static/
+media/
+.idea/

@@ -1,9 +1,0 @@
-__pycache__/
-*.py[cod]
-.venv/
-db.sqlite3
-*.log
-*.pot
-*.pyc
-staticfiles/
-media/
