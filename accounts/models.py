@@ -24,9 +24,9 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
-    def is_subscribed(self):
-        return True
-    #is_subscribed = models.BooleanField(default=False)
+    #def is_subscribed(self):
+        #return True
+    is_subscribed = models.BooleanField(default=False)
     storage_quota = models.BigIntegerField(default=5 * 1024 * 1024 * 1024)
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

@@ -1,93 +1,285 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}CloudAnywhere{% endblock %}</title>
+  <link rel="icon" href="{% static 'favicon.ico' %}" />
   <style>
     :root{
-      --bg:#0d1117; --card:#161b22; --line:#262c36; --acc:#3b82f6;
+      --bg:#0b111a; --text:#e5e7eb; --muted:#9aa4b2;
+      --card:#111826; --line:#1f2a3a;
+      --primary:#3b82f6; --primary-contrast:#ffffff;
+      --shadow:0 8px 24px rgba(0,0,0,.25);
+      --toast-success-bg:#122016; --toast-success-brd:#234d2a;
+      --toast-error-bg:#241617;  --toast-error-brd:#503131;
       color-scheme:dark;
     }
+    html[data-theme="light"]{
+      --bg:#f6f7fb; --text:#0f172a; --muted:#475569;
+      --card:#ffffff; --line:#e6e8ee;
+      --primary:#2563eb; --primary-contrast:#ffffff;
+      --shadow:0 8px 24px rgba(2,6,23,.08);
+      --toast-success-bg:#e7f6ec; --toast-success-brd:#b7e0c3;
+      --toast-error-bg:#fdebea;  --toast-error-brd:#f5c2c0;
+      color-scheme:light;
+    }
+    @media (prefers-color-scheme: light){
+      html:not([data-theme]){
+        --bg:#f6f7fb; --text:#0f172a; --muted:#475569;
+        --card:#ffffff; --line:#e6e8ee;
+        --primary:#2563eb; --primary-contrast:#ffffff;
+        --shadow:0 8px 24px rgba(2,6,23,.08);
+        --toast-success-bg:#e7f6ec; --toast-success-brd:#b7e0c3;
+        --toast-error-bg:#fdebea;  --toast-error-brd:#f5c2c0;
+        color-scheme:light;
+      }
+    }
+
     *{box-sizing:border-box;margin:0;padding:0}
     body{
       min-height:100vh; display:flex; flex-direction:column;
-      background:var(--bg); color:#d1d5db; font-family:system-ui,sans-serif;
+      background:var(--bg); color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
     }
-    a{color:#9bb1ff; text-decoration:none} a:hover{color:#b5c6ff}
-    .btn{background:transparent;border:1px solid var(--line);color:#d1d5db;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px}
-    .btn.primary{background:var(--acc);border:none;color:#fff}.btn:hover{opacity:.9}
+    a{color:#9bb1ff;text-decoration:none}
+    a:hover{color:#bcd0ff}
 
+    /* header */
     header{display:flex;justify-content:space-between;align-items:center;padding:12px 28px;border-bottom:1px solid var(--line)}
-    .brand a{font-weight:700;color:#fff}
+    .brand a{color:var(--text);font-weight:800;letter-spacing:.2px;opacity:.92;transition:opacity .15s,transform .15s}
+    .brand a:hover{opacity:1;transform:translateY(-.5px)}
+    .top{display:flex;justify-content:space-between;gap:12px}
+    .right{display:flex;align-items:center;gap:10px}
 
-    /* Контейнер страницы:
-       по умолчанию узкий (лендинг),
-       страница может попросить .wide */
-    main.wrap{flex:1 0 auto; width:100%; max-width:1040px; margin:0 auto; padding:32px 18px}
+    .btn{background:transparent;border:1px solid var(--line);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+    .btn.primary{background:var(--primary);border:none;color:var(--primary-contrast)}
+    .btn:hover{opacity:.92}
+
+    /* layout */
+    main.wrap{flex:1 0 auto;width:100%;max-width:1040px;margin:0 auto;padding:32px 18px}
     main.wrap.wide{max-width:1320px}
     @media (min-width:1600px){ main.wrap.wide{max-width:1440px} }
 
-    footer{border-top:1px solid var(--line); text-align:center; padding:12px; color:#778}
+    footer{border-top:1px solid var(--line); text-align:center; padding:12px; color:var(--muted)}
     .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
-    .muted{color:#98a2b3}
+    .muted{color:var(--muted)}
+
     /* user menu */
     .userbox{position:relative;display:inline-block}
-    .avatar{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--line);color:#9bb1ff;font-weight:700;cursor:pointer}
-    .dropdown{position:absolute;right:0;top:44px;background:var(--card);border:1px solid var(--line);border-radius:12px;min-width:200px;padding:6px;display:none;z-index:50}
+    .avatar{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--line);color:#9bb1ff;font-weight:700;cursor:pointer;display:grid;place-items:center}
+    .dropdown{position:absolute;right:0;top:44px;background:var(--card);border:1px solid var(--line);border-radius:12px;min-width:220px;padding:6px;display:none;z-index:50}
     .dropdown.open{display:block}
-    .dropdown-item{display:block;padding:10px 12px;border-radius:8px;color:#ddd}
-    .dropdown-item:hover{background:#1b2230}.dropdown-sep{height:1px;background:var(--line);margin:6px 0}
+    .dropdown-item{display:block;padding:10px 12px;border-radius:8px;color:var(--text)}
+    .dropdown-item:hover{background:rgba(255,255,255,.06)}
+    .dropdown-sep{height:1px;background:var(--line);margin:6px 0}
+
+    /* theme toggle */
+    .theme{position:relative;display:inline-block}
+    .icon-btn{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer}
+    .icon-btn:hover{outline:1px solid var(--line)}
+    .ic{width:18px;height:18px;display:none}
+    .icon-btn.show-auto .ic-auto{display:block}
+    .icon-btn.show-sun  .ic-sun {display:block}
+    .icon-btn.show-moon .ic-moon{display:block}
+
+    .theme-popover{position:absolute;right:0;top:44px;z-index:50;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;display:none;min-width:180px}
+    .theme-popover.open{display:block}
+    .theme-popover button{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:0;background:transparent;color:var(--text);border-radius:8px;cursor:pointer}
+    .theme-popover button:hover{background:rgba(255,255,255,.06)}
+    .theme-popover svg{width:16px;height:16px}
+
+    /* previews */
+    .preview{
+      position:relative; height:220px;
+      border-radius:12px; border:1px dashed var(--line);
+      background:
+        radial-gradient(1200px 1200px at -20% -30%, rgba(59,130,246,.08), transparent 40%),
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0));
+      display:flex; align-items:center; justify-content:center;
+      color:var(--muted);
+    }
+    html[data-theme="light"] .preview{
+      background:
+        radial-gradient(1200px 1200px at -20% -30%, rgba(37,99,235,.06), transparent 40%),
+        linear-gradient(180deg, rgba(2,6,23,.03), rgba(2,6,23,0));
+    }
+
+    /* forms */
+    input, select, textarea{
+      background:var(--card); color:var(--text);
+      border:1px solid var(--line); border-radius:8px;
+      padding:10px 12px; outline:none; width:100%;
+    }
+    input:focus, select:focus, textarea:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent)
+    }
+    label{color:var(--muted); font-size:12px}
+
+    .auth-form .row{ margin:10px 0; }
+    .auth-form label{ display:block; margin-bottom:6px; }
+    .auth-form .check{ display:flex; align-items:center; gap:8px; color:var(--muted); }
+    .auth-form .check input[type="checkbox"]{ width:16px; height:16px; }
+
+    html[data-theme="light"] input,
+    html[data-theme="light"] select,
+    html[data-theme="light"] textarea{
+      background:#fff; color:#0f172a; border:1px solid var(--line);
+    }
+
+    /* toasts */
+    #toasts{position:fixed;right:24px;bottom:24px;display:grid;gap:10px;z-index:100}
+    .toast{border:1px solid var(--line);border-radius:12px;padding:10px 14px;box-shadow:var(--shadow);animation:toast-in .18s ease-out}
+    .toast.success{background:var(--toast-success-bg);border-color:var(--toast-success-brd)}
+    .toast.error{background:var(--toast-error-bg);border-color:var(--toast-error-brd)}
+    @keyframes toast-in{from{transform:translateY(6px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .fade-out{animation:toast-out .2s ease-in forwards}
+    @keyframes toast-out{to{transform:translateY(6px);opacity:0}}
+
+    #themeMenu { display: none !important; }
+    .ic{width:18px;height:18px;display:block;line-height:0}
   </style>
 </head>
 <body>
-  <header>
-    <div class="brand"><a href="{% url 'home' %}">CloudAnywhere</a></div>
-    <nav>
-      {% if user.is_authenticated %}
-        <div class="userbox">
-          <button class="avatar" id="avatarBtn">{{ user.email|first|upper }}</button>
-          <div class="dropdown" id="userMenu">
-            <div class="dropdown-item muted">{{ user.email }}</div>
-            <a class="dropdown-item" href="{% url 'files' %}">Мои файлы</a>
-            <div class="dropdown-sep"></div>
-            <form method="post" action="{% url 'account_logout' %}">{% csrf_token %}
-              <button class="dropdown-item" type="submit">Выйти</button>
-            </form>
-          </div>
+
+  <header class="top">
+    <div class="container topbar">
+      <div class="brand"><a href="{% url 'home' %}"><span class="logo"></span>CloudAnywhere</a></div>
+    </div>
+
+    <div class="right">
+      <div class="theme">
+        <button id="themeBtn" class="icon-btn" title="Тема">
+          <svg class="ic ic-auto" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1Zm7 10a7 7 0 1 1-14 0a7 7 0 0 1 14 0Zm3 0a1 1 0 0 1-1 1h-2a1 1 0 1 1 0-2h2a1 1 0 0 1 1 1ZM4 13H2a1 1 0 1 1 0-2h2a1 1 0 1 1 0 2Zm1.64 6.36a1 1 0 0 1 0-1.41l1.41-1.41a1 1 0 1 1 1.41 1.41L7.05 19.95a1 1 0 0 1-1.41 0Zm12.9 0l-1.41-1.41a1 1 0 1 1 1.41-1.41l1.41 1.41a1 1 0 1 1-1.41 1.41Z"/></svg>
+          <svg class="ic ic-sun"  viewBox="0 0 24 24"><path fill="currentColor" d="M6.76 4.84L5.34 3.42a1 1 0 0 1 1.41-1.41l1.42 1.41a1 1 0 1 1-1.41 1.41ZM12 5a7 7 0 1 1 0 14a7 7 0 0 1 0-14Zm0-3a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1Zm9 8h-2a1 1 0 1 1 0-2h2a1 1 0 1 1 0 2ZM4 13H2a1 1 0 1 1 0-2h2a1 1 0 1 1 0 2Zm12.24 6.16l1.42 1.41a1 1 0 0 1-1.41 1.41l-1.42-1.41a1 1 0 1 1 1.41-1.41Z"/></svg>
+          <svg class="ic ic-moon" viewBox="0 0 24 24"><path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 1 0 21 12.79Z"/></svg>
+        </button>
+        <div id="themeMenu" class="theme-popover">
+          <button data-theme="system"  title="Системная"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1Z"/></svg>Системная</button>
+          <button data-theme="light"   title="Светлая"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M6.76 4.84 5.34 3.42a1 1 0 0 1 1.41-1.41l1.42 1.41Z"/></svg>Светлая</button>
+          <button data-theme="dark"    title="Тёмная"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3Z"/></svg>Тёмная</button>
         </div>
+      </div>
+
+      {% if user.is_authenticated %}
+      <div class="userbox">
+        <button class="avatar" id="avatarBtn">{{ user.email|first|upper }}</button>
+        <div class="dropdown" id="userMenu">
+          <div class="dropdown-item muted">{{ user.email }}</div>
+          <a class="dropdown-item" href="{% url 'files' %}">Мои файлы</a>
+          <div class="dropdown-sep"></div>
+          <form method="post" action="{% url 'account_logout' %}">{% csrf_token %}
+            <button class="dropdown-item" type="submit">Выйти</button>
+          </form>
+        </div>
+      </div>
       {% else %}
         <a class="btn" href="{% url 'account_login' %}">Вход</a>
         <a class="btn primary" href="{% url 'account_signup' %}">Регистрация</a>
       {% endif %}
-    </nav>
+    </div>
   </header>
 
   <main class="wrap {% block main_mod %}{% endblock %}">
-    {% if messages %}
-  <div style="margin:0 0 12px;display:grid;gap:8px">
-    {% for m in messages %}
-      <div class="card"
-           style="border-color:{% if m.tags == 'success' %}#234d2a{% else %}#503131{% endif %};
-                  background:{% if m.tags == 'success' %}#122016{% else %}#241617{% endif %}">
-        {{ m }}
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
-
     {% block content %}{% endblock %}
   </main>
 
-  <footer>© CloudAnywhere. Мини-облако для людей, уставших от флешек.</footer>
+  <footer>
+    © CloudAnywhere. Мини-облако для людей, уставших от флешек.
+  </footer>
+
+  <div id="toasts">
+    {% if messages %}
+      {% for m in messages %}
+        <div class="toast {% if m.tags and 'success' in m.tags %}success{% elif m.tags and 'error' in m.tags %}error{% endif %}">
+          {{ m }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
 
   <script>
+    // user menu (без изменений)
     document.addEventListener('click', e=>{
-      const b=document.getElementById('avatarBtn'), m=document.getElementById('userMenu');
-      if(!b||!m) return;
-      if(e.target===b){ m.classList.toggle('open'); return; }
-      if(!m.contains(e.target)) m.classList.remove('open');
+      const btn=document.getElementById('avatarBtn');
+      const menu=document.getElementById('userMenu');
+      if(!menu) return;
+      if(e.target===btn){ menu.classList.toggle('open'); return; }
+      if(!menu.contains(e.target)) menu.classList.remove('open');
     });
+
+    // theme: A -> ☀ -> 🌙 с подсказкой
+    (function(){
+      const key='theme';
+      const root=document.documentElement;
+      const btn=document.getElementById('themeBtn');
+      const order=['system','light','dark'];
+      const titles={
+        system:'Тема: системная',
+        light:'Тема: светлая',
+        dark:'Тема: тёмная'
+      };
+
+      function setIcon(mode){
+        btn.innerHTML = '';
+        btn.style.fontWeight = '';
+        btn.style.fontSize = '';
+
+        if (mode === 'light') {
+          // Материальное "солнце": цельный path, fill=currentColor
+          btn.innerHTML =
+            '<svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">' +
+            '<path d="M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.79 1.8-1.79zM1 13h3v-2H1v2zm10 10h-2v-3h2v3zm8.83-7.37l-1.79-1.79-1.8 1.79 1.79 1.8 1.8-1.8zM20 11h3v2h-3v-2zm-8-7h-2V1h2v3zm-6.24 14.24l-1.79 1.79 1.41 1.41 1.8-1.79-1.42-1.41zM17.66 6.62l1.79-1.79-1.41-1.41-1.8 1.79 1.42 1.41zM12 6a6 6 0 100 12 6 6 0 000-12z"/>' +
+            '</svg>';
+        } else if (mode === 'dark') {
+          // Луна: цельный path, fill=currentColor
+          btn.innerHTML =
+            '<svg class="ic" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">' +
+            '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 1 0 21 12.79Z"/>' +
+            '</svg>';
+        } else {
+          // Системная: буква A
+          btn.textContent = 'A';
+          btn.style.fontWeight = '700';
+          btn.style.fontSize = '16px';
+        }
+
+        btn.title = titles[mode];
+      }
+
+      function apply(mode){
+        if(mode==='light') root.setAttribute('data-theme','light');
+        else if(mode==='dark') root.setAttribute('data-theme','dark');
+        else root.removeAttribute('data-theme');
+        setIcon(mode);
+      }
+
+      function load(){ return localStorage.getItem(key) || 'dark'; }
+      function save(v){ localStorage.setItem(key,v); }
+
+      let current=load();
+      apply(current);
+
+      btn?.addEventListener('click', ()=>{
+        const idx=order.indexOf(current);
+        current=order[(idx+1)%order.length];
+        save(current);
+        apply(current);
+      });
+    })();
+
+    // toasts autohide
+    (function(){
+      const toasts=[...document.querySelectorAll('#toasts .toast')];
+      toasts.forEach((t,i)=>{
+        const timeout=3500+i*200;
+        setTimeout(()=>t.classList.add('fade-out'),timeout);
+        setTimeout(()=>t.remove(),timeout+220);
+      });
+    })();
   </script>
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

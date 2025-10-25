@@ -2,39 +2,122 @@
 {% load humanize %}
 {% block title %}Мои файлы{% endblock %}
 {% block main_mod %}wide{% endblock %}
-{% block content %}
 
+{% block content %}
 <style>
+  :root{
+    --sidebar-w:260px;
+  }
+
+  .files-layout{
+    display:grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    gap:20px;
+  }
+
+  /* ---------- LEFT: storage + menu ---------- */
+  .usage{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    align-items:stretch;
+    text-align:center;
+  }
+  .usage-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:13px;
+  }
+  .usage-top .muted{font-size:12px}
+  .bar{
+    height:6px;
+    background:#121722;
+    border:1px solid var(--line);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  html[data-theme="light"] .bar{background:#e9edf5}
+  .bar-fill{height:100%;background:var(--acc)}
+  .plan.good{color:#15803d;font-size:12px;margin-top:2px}
+  .plan.bad{ color:#b45309;font-size:12px;margin-top:2px}
+  .usage .btn.primary{
+    width:100%;
+    margin-top:6px;
+    padding:7px 0;
+    font-size:13.5px;
+    border-radius:8px;
+    align-self:center;
+  }
+
+  .menu{
+    margin-top:12px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:6px 8px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;                 /* управляем расстояниями здесь */
+  }
+  .menu-item{
+    padding:9px 10px;
+    border-radius:10px;
+    color:var(--text);
+    border:1px solid var(--line);
+    background:var(--card);
+  }
+  .menu-item:hover{outline:1px solid var(--line)}
+  .menu-item.active{
+    border-color:var(--primary);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+  }
+
+  /* ---------- RIGHT: board + grid ---------- */
+  .board{display:flex;flex-direction:column;gap:16px}
+  .board-top{display:flex;justify-content:space-between;align-items:center}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
-  .tile{display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;cursor:pointer}
+
+  .tile{
+    display:block;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:12px;
+    cursor:pointer;
+  }
   .tile:hover{border-color:#2b3240}
-  .tile-thumb{position:relative;height:150px;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:grid;place-items:center;background:#0f141d}
+  .tile-thumb{
+    position:relative;height:150px;
+    border:1px solid var(--line);
+    border-radius:12px;overflow:hidden;
+    display:grid;place-items:center;
+    background:#0f141d;
+  }
+  html[data-theme="light"] .tile-thumb{background:#f2f5fa}
   .tile-thumb img,.tile-thumb video{width:100%;height:100%;object-fit:cover;display:block}
-  .tile-thumb .badge{font-weight:700;color:#8ab4f8;border:1px dashed var(--line);padding:6px 10px;border-radius:8px;background:#0f141d}
+  .tile-thumb .badge{
+    font-weight:700;color:#8ab4f8;
+    border:1px dashed var(--line);
+    padding:6px 10px;border-radius:8px;
+    background:#0f141d;
+  }
+  html[data-theme="light"] .tile-thumb .badge{background:rgba(0,0,0,.06)}
   .tile-name{margin-top:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tile-meta{font-size:12px;color:#9aa4b2}
 
+  /* ---------- Context menu ---------- */
   .ctx{position:fixed;z-index:1000;display:none;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.3);padding:6px}
   .ctx.open{display:block}
-  .ctx-item{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:#d7dbe3;cursor:pointer}
-  .ctx-item:hover{background:#17202b}
+  .ctx-item{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:var(--text);cursor:pointer}
+  .ctx-item:hover{background:rgba(127,127,127,.08)}
   .ctx-item[aria-disabled="true"]{opacity:.5;cursor:default}
   .ctx-sep{height:1px;background:var(--line);margin:6px 0}
   .ctx-kbd{margin-left:auto;font-size:11px;color:#8b98a6}
-
-  .files-layout{display:grid;grid-template-columns:280px 1fr;gap:20px}
-  .usage{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:10px}
-  .usage-top{display:flex;justify-content:space-between;align-items:center}
-  .bar{height:10px;background:#121722;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-  .bar-fill{height:100%;background:var(--acc)}
-  .plan.good{color:#7ddc86;font-size:13px}
-  .plan.bad{color:#f4a261;font-size:13px}
-  .menu{display:flex;flex-direction:column;gap:4px}
-  .menu-item{padding:10px 12px;border-radius:10px;color:#ddd}
-  .menu-item:hover{background:#141a24}
-  .menu-item.active{background:#151a23;border:1px solid var(--line)}
-  .board{display:flex;flex-direction:column;gap:16px}
-  .board-top{display:flex;justify-content:space-between;align-items:center}
 </style>
 
 <div class="files-layout">
@@ -44,7 +127,9 @@
         <div>Хранилище</div>
         <div class="muted">{{ used|filesizeformat }} / {{ quota|filesizeformat }}</div>
       </div>
-      <div class="bar"><div class="bar-fill" style="width: {{ percent }}%"></div></div>
+      <div class="bar">
+        <div class="bar-fill" style="width: {{ percent }}%"></div>
+      </div>
       {% if user.is_subscribed %}
         <div class="plan good">Подписка активна</div>
       {% else %}
@@ -116,34 +201,44 @@
 </div>
 
 <script>
-(function(){
-  const grid=document.getElementById('fileGrid'), menu=document.getElementById('ctxMenu');
-  let current=null;
-  function hide(){menu.classList.remove('open');menu.setAttribute('aria-hidden','true');current=null}
-  function show(x,y){menu.style.left=Math.min(x,innerWidth-menu.offsetWidth-8)+'px';menu.style.top=Math.min(y,innerHeight-menu.offsetHeight-8)+'px';menu.classList.add('open');menu.setAttribute('aria-hidden','false')}
+  (function(){
+    const grid=document.getElementById('fileGrid');
+    const menu=document.getElementById('ctxMenu');
+    let current=null;
 
-  grid.addEventListener('click',e=>{
-    const tile=e.target.closest('.tile'); if(!tile) return;
-    const kind=tile.dataset.kind, view=tile.dataset.view, dl=tile.dataset.download;
-    const url=(kind==='image'||kind==='video'||kind==='pdf')?view:dl;
-    if(e.metaKey||e.ctrlKey) window.open(url,'_blank'); else location=url;
-  });
+    function hide(){menu.classList.remove('open');menu.setAttribute('aria-hidden','true');current=null}
+    function show(x,y){
+      menu.style.left=Math.min(x,innerWidth-menu.offsetWidth-8)+'px';
+      menu.style.top=Math.min(y,innerHeight-menu.offsetHeight-8)+'px';
+      menu.classList.add('open');menu.setAttribute('aria-hidden','false');
+    }
 
-  grid.addEventListener('contextmenu',e=>{
-    const tile=e.target.closest('.tile'); if(!tile) return;
-    e.preventDefault(); current=tile; show(e.clientX,e.clientY);
-  });
+    if(grid){
+      grid.addEventListener('click',e=>{
+        const tile=e.target.closest('.tile'); if(!tile) return;
+        const kind=tile.dataset.kind, view=tile.dataset.view, dl=tile.dataset.download;
+        const url=(kind==='image'||kind==='video'||kind==='pdf')?view:dl;
+        if(e.metaKey||e.ctrlKey) window.open(url,'_blank'); else location=url;
+      });
 
-  menu.addEventListener('click',e=>{
-    const item=e.target.closest('.ctx-item'); if(!item||item.getAttribute('aria-disabled')==='true'||!current) return;
-    const action=item.dataset.action; const dl=current.dataset.download;
-    if(action==='download') location=dl; else alert('Функция «'+action+'» появится позже.'); hide();
-  });
+      grid.addEventListener('contextmenu',e=>{
+        const tile=e.target.closest('.tile'); if(!tile) return;
+        e.preventDefault(); current=tile; show(e.clientX,e.clientY);
+      });
+    }
 
-  addEventListener('click',e=>{ if(!menu.contains(e.target)) hide(); });
-  addEventListener('scroll',hide,true); addEventListener('resize',hide);
-  addEventListener('keydown',e=>{ if(e.key==='Escape') hide(); });
-})();
+    menu.addEventListener('click',e=>{
+      const item=e.target.closest('.ctx-item');
+      if(!item||item.getAttribute('aria-disabled')==='true'||!current) return;
+      const action=item.dataset.action; const dl=current.dataset.download;
+      if(action==='download') location=dl; else alert('Функция «'+action+'» появится позже.');
+      hide();
+    });
+
+    addEventListener('click',e=>{ if(!menu.contains(e.target)) hide(); });
+    addEventListener('scroll',hide,true);
+    addEventListener('resize',hide);
+    addEventListener('keydown',e=>{ if(e.key==='Escape') hide(); });
+  })();
 </script>
-
 {% endblock %}

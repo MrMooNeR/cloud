@@ -29,7 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = BASE_DIR / 'var' / 'media'
 # Application definition
 
 INSTALLED_APPS = [
@@ -46,7 +46,18 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'accounts',
     'core',
+    'storages',
 ]
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "auto")
+
+AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
+AWS_S3_OBJECT_PARAMETERS = {"ACL": "private"}
+AWS_QUERYSTRING_AUTH = True
 
 AUTH_USER_MODEL = 'accounts.User'
 SITE_ID = 1
