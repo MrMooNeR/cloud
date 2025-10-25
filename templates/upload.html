@@ -1,10 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Загрузка файла{% endblock %}
+{% block content %}
+  <div class="card" style="max-width:560px">
+    <h2>Загрузить файл</h2>
+    <form method="post" enctype="multipart/form-data" class="form" style="margin-top:12px;display:grid;gap:12px">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {{ form.file.errors }}
+      {{ form.file }}
+      <div style="display:flex;gap:10px">
+        <a class="btn" href="{% url 'files' %}">Отмена</a>
+        <button class="btn primary" type="submit">Загрузить</button>
+      </div>
+      <p class="muted" style="font-size:13px">Только для пользователей с активной подпиской.</p>
+    </form>
+  </div>
+{% endblock %}
