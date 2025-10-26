@@ -140,6 +140,95 @@
 
     #themeMenu { display: none !important; }
     .ic{width:18px;height:18px;display:block;line-height:0}
+
+    /* ===== Mobile fixes for Files/Dashboard ===== */
+    main { overflow-x: hidden; }
+
+    /* 820px: сайдбар наверх, контент под ним, сетка попроще */
+    @media (max-width: 820px){
+      .container{
+        display: grid;
+        grid-template-columns: 1fr;      /* одна колонка */
+        gap: 16px;
+        align-items: start;
+      }
+      .sidebar{
+        position: static;
+        width: auto;
+        margin: 0 16px;                  /* дыхание у краёв */
+      }
+      .sidebar .card{
+        padding: 14px;
+      }
+      .menu .item{
+        height: auto;
+        padding: 12px 14px;
+      }
+
+      .files-header,
+      .files-toolbar{
+        padding: 0 16px;
+        gap: 8px;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .file-grid{
+        display: grid;
+        grid-template-columns: repeat(2, minmax(140px, 1fr)); /* 2 колонки */
+        gap: 12px;
+        padding: 0 16px 16px;
+      }
+
+      .file-card{
+        border-radius: 14px;
+      }
+      .file-card .thumb{
+        border-radius: 12px;
+        height: 150px;                   /* фиксированная, но невысокая обложка */
+        overflow: hidden;
+      }
+    }
+
+    /* 520px: всё в одну колонку, кнопки на всю ширину */
+    @media (max-width: 520px){
+      .sidebar{ margin: 0 12px; }
+      .file-grid{
+        grid-template-columns: 1fr;      /* одна колонка */
+        padding: 0 12px 12px;
+        gap: 10px;
+      }
+      .btn.primary,
+      .btn{
+        width: 100%;
+      }
+    }
+
+    /* картинки в карточках не рвут макет */
+    .file-card .thumb img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* заголовки/текст не вываливаются */
+    .file-card .title,
+    .file-card .meta{
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* чтобы «тосты» не перекрывались при малой ширине */
+    .toast-wrap{
+      max-width: calc(100vw - 24px);
+      right: 12px;
+      left: 12px;
+      margin-left: auto;
+      margin-right: 0;
+    }
+
   </style>
 </head>
 <body>
