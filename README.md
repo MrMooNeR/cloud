@@ -41,8 +41,9 @@ CloudAnywhere — это персональное облачное хранил�
 
 3. Примени миграции и запускай сервер:
 
-   ```python manage.py migrate```
-   ```python manage.py runserver```
+   ```bash
+   python manage.py migrate
+   python manage.py runserver
 
 
 ## 💡 Планы
