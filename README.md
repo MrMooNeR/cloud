@@ -26,21 +26,23 @@ CloudAnywhere — это персональное облачное хранил�
    ```bash
    git clone https://github.com/MrMooNeR/cloud.git
    cd cloud
-Создай виртуальное окружение и активируй его:
+   
+## ⚙ Установка
 
+1. Создай виртуальное окружение и активируй его:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate   # для Linux / Mac
+   .venv\Scripts\activate      # для Windows
 
-python -m venv .venv
-source .venv/bin/activate   # для Linux / Mac
-.venv\Scripts\activate      # для Windows
-Установи зависимости:
+2. Установи зависимости:
 
+   ```pip install -r requirements.txt```
 
-pip install -r requirements.txt
-Применяй миграции и запускай сервер:
+3. Примени миграции и запускай сервер:
 
-
-python manage.py migrate
-python manage.py runserver
+   ```python manage.py migrate```
+   ```python manage.py runserver```
 
 
 ## 💡 Планы
