@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Создание промокодов — CloudAnywhere{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Генератор промокодов</h1>
+  <p class="lead">Создайте тестовые коды для скидок или бесплатного доступа.</p>
+</section>
+
+<section class="generator">
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
+      <div class="grid">
+        <div class="col">
+          <label for="id_prefix">{{ form.prefix.label }}{% if form.prefix.help_text %}<span class="hint">{{ form.prefix.help_text }}</span>{% endif %}</label>
+          {{ form.prefix }}
+          {% if form.prefix.errors %}<div class="error">{{ form.prefix.errors|striptags }}</div>{% endif %}
+        </div>
+        <div class="col">
+          <label for="id_quantity">{{ form.quantity.label }}</label>
+          {{ form.quantity }}
+          {% if form.quantity.errors %}<div class="error">{{ form.quantity.errors|striptags }}</div>{% endif %}
+        </div>
+        <div class="col">
+          <label for="id_length">{{ form.length.label }}</label>
+          {{ form.length }}
+          {% if form.length.errors %}<div class="error">{{ form.length.errors|striptags }}</div>{% endif %}
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="col">
+          <label for="id_discount_percent">{{ form.discount_percent.label }}</label>
+          {{ form.discount_percent }}
+          {% if form.discount_percent.errors %}<div class="error">{{ form.discount_percent.errors|striptags }}</div>{% endif %}
+        </div>
+        <div class="col check">
+          <label for="id_grant_subscription">{{ form.grant_subscription.label }}</label>
+          <div class="check-box">{{ form.grant_subscription }}</div>
+          {% if form.grant_subscription.errors %}<div class="error">{{ form.grant_subscription.errors|striptags }}</div>{% endif %}
+        </div>
+        <div class="col">
+          <label for="id_extra_storage_gb">{{ form.extra_storage_gb.label }}</label>
+          {{ form.extra_storage_gb }}
+          {% if form.extra_storage_gb.errors %}<div class="error">{{ form.extra_storage_gb.errors|striptags }}</div>{% endif %}
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="col">
+          <label for="id_valid_days">{{ form.valid_days.label }}{% if form.valid_days.help_text %}<span class="hint">{{ form.valid_days.help_text }}</span>{% endif %}</label>
+          {{ form.valid_days }}
+          {% if form.valid_days.errors %}<div class="error">{{ form.valid_days.errors|striptags }}</div>{% endif %}
+        </div>
+        <div class="col">
+          <label for="id_max_uses">{{ form.max_uses.label }}{% if form.max_uses.help_text %}<span class="hint">{{ form.max_uses.help_text }}</span>{% endif %}</label>
+          {{ form.max_uses }}
+          {% if form.max_uses.errors %}<div class="error">{{ form.max_uses.errors|striptags }}</div>{% endif %}
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="id_description">{{ form.description.label }}</label>
+        {{ form.description }}
+        {% if form.description.errors %}<div class="error">{{ form.description.errors|striptags }}</div>{% endif %}
+      </div>
+
+      {% if form.non_field_errors %}<div class="error">{{ form.non_field_errors|striptags }}</div>{% endif %}
+
+      <div class="actions">
+        <button class="btn primary" type="submit">Сгенерировать</button>
+        <a class="btn" href="{% url 'pricing' %}">Назад к тарифам</a>
+      </div>
+    </form>
+  </div>
+
+  {% if generated_codes %}
+  <div class="card codes">
+    <h2>Созданные коды</h2>
+    <ul>
+      {% for code in generated_codes %}
+      <li><code>{{ code }}</code></li>
+      {% endfor %}
+    </ul>
+    <p class="muted">Скопируйте коды, чтобы поделиться ими или протестировать тарифы.</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+  .hero{display:grid;gap:8px;margin-bottom:24px}
+  .hero h1{font-size:32px;font-weight:700}
+  .hero .lead{color:var(--muted)}
+  .generator{display:grid;gap:24px;grid-template-columns:2fr 1fr}
+  .card form{display:grid;gap:18px}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid .col{display:grid;gap:6px}
+  .grid .col.check{align-content:flex-end}
+  .check-box{display:flex;align-items:center;height:42px}
+  .row{display:grid;gap:6px}
+  .hint{display:block;font-size:11px;color:var(--muted)}
+  .error{color:#f87171;font-size:13px}
+  .actions{display:flex;gap:12px;justify-content:flex-end}
+  .codes ul{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+  .codes code{background:rgba(59,130,246,.14);padding:6px 10px;border-radius:8px;font-weight:600;letter-spacing:1px}
+  @media(max-width:960px){
+    .generator{grid-template-columns:1fr}
+  }
+  @media(max-width:720px){
+    .grid{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:540px){
+    .grid{grid-template-columns:1fr}
+    .actions{flex-direction:column;align-items:stretch}
+  }
+</style>
+{% endblock %}

@@ -1,5 +1,8 @@
+from decimal import Decimal, ROUND_HALF_UP
+
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db import IntegrityError, transaction
 from django.db.models import Sum
 from django.shortcuts import render, redirect
 from django.http import FileResponse, Http404, JsonResponse
@@ -8,8 +11,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
-from .models import DropFile, File
-from .forms import UploadForm
+from .models import DropFile, File, PromoCode, PromoRedemption
+from .forms import PromoCodeApplyForm, PromoCodeGenerateForm, UploadForm
 from .utils import cleanup_expired_dropfiles, require_subscription
 
 
@@ -19,8 +22,142 @@ def home(request):
         return redirect('files')
     return render(request, 'home.html')
 
+PAID_PLAN_PRICES = {
+    "standard": Decimal("299"),
+    "premium": Decimal("899"),
+}
+
+
+def _apply_discount(amount: Decimal, percent: int) -> int:
+    discounted = amount * (Decimal(100) - Decimal(percent)) / Decimal(100)
+    return int(discounted.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+
 def pricing(request):
+    promo_form = PromoCodeApplyForm()
+    redemptions = []
+    discount_info = None
+    standard_price = int(PAID_PLAN_PRICES["standard"])
+    premium_price = int(PAID_PLAN_PRICES["premium"])
+    discounted_standard_price = standard_price
+    discounted_premium_price = premium_price
+    if request.user.is_authenticated:
+        user_redemptions = request.user.promo_redemptions.select_related("promo")
+        redemptions = list(user_redemptions[:5])
+        discount_redemption = (
+            user_redemptions.filter(discount_percent__gt=0)
+            .order_by("-discount_percent", "-redeemed_at")
+            .first()
+        )
+        if discount_redemption:
+            percent = discount_redemption.discount_percent
+            discounted_standard_price = _apply_discount(
+                PAID_PLAN_PRICES["standard"], percent
+            )
+            discounted_premium_price = _apply_discount(
+                PAID_PLAN_PRICES["premium"], percent
+            )
+            discount_info = {
+                "percent": percent,
+                "standard_price": discounted_standard_price,
+                "premium_price": discounted_premium_price,
+                "code": discount_redemption.promo.code,
+            }
     return render(request, 'pricing.html', {
+        'active_menu': 'pricing',
+        'promo_form': promo_form,
+        'redemptions': redemptions,
+        'standard_price': standard_price,
+        'premium_price': premium_price,
+        'discounted_standard_price': discounted_standard_price,
+        'discounted_premium_price': discounted_premium_price,
+        'discount_info': discount_info,
+    })
+
+
+@login_required
+@require_POST
+def apply_promo_code(request):
+    form = PromoCodeApplyForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "Введите корректный промокод.")
+        return redirect('pricing')
+    code = form.cleaned_data["code"].strip()
+    try:
+        promo = PromoCode.objects.get(code__iexact=code)
+    except PromoCode.DoesNotExist:
+        messages.error(request, "Такого промокода не существует.")
+        return redirect('pricing')
+    if not promo.is_available():
+        messages.error(request, "Этот промокод уже недействителен.")
+        return redirect('pricing')
+    try:
+        with transaction.atomic():
+            redemption, created = PromoRedemption.objects.get_or_create(
+                promo=promo,
+                user=request.user,
+                defaults={
+                    "discount_percent": promo.discount_percent,
+                    "extra_storage_bytes": promo.extra_storage_bytes,
+                    "granted_subscription": promo.grant_subscription,
+                },
+            )
+            if not created:
+                messages.error(request, "Вы уже активировали этот промокод.")
+                return redirect('pricing')
+            notes = promo.apply_to_user(request.user)
+            promo.register_use()
+    except IntegrityError:
+        messages.error(request, "Не удалось активировать промокод. Попробуйте ещё раз.")
+        return redirect('pricing')
+    effects = list(dict.fromkeys(notes))
+    if promo.discount_percent:
+        effects.append(f"скидка {promo.discount_percent}%")
+    if effects:
+        summary = ", ".join(effects)
+        messages.success(request, f"Промокод активирован: {summary}.")
+    else:
+        messages.success(request, "Промокод активирован.")
+    return redirect('pricing')
+
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def generate_promocodes(request):
+    generated_codes = []
+    if request.method == "POST":
+        form = PromoCodeGenerateForm(request.POST)
+        if form.is_valid():
+            expiry = form.build_expiry()
+            quantity = form.cleaned_data["quantity"]
+            prefix = form.cleaned_data.get("prefix") or ""
+            discount = form.cleaned_data.get("discount_percent") or 0
+            grant = form.cleaned_data.get("grant_subscription")
+            extra_gb = form.cleaned_data.get("extra_storage_gb") or 0
+            extra_bytes = extra_gb * 1024 * 1024 * 1024
+            max_uses = form.cleaned_data.get("max_uses")
+            description = form.cleaned_data.get("description") or ""
+            length = form.cleaned_data["length"]
+            with transaction.atomic():
+                for _ in range(quantity):
+                    code = PromoCode.generate_code(length=length, prefix=prefix)
+                    PromoCode.objects.create(
+                        code=code,
+                        description=description,
+                        discount_percent=discount,
+                        grant_subscription=grant,
+                        extra_storage_bytes=extra_bytes,
+                        max_uses=max_uses,
+                        valid_until=expiry,
+                        created_by=request.user,
+                    )
+                    generated_codes.append(code)
+            messages.success(request, f"Создано промокодов: {len(generated_codes)}")
+    else:
+        form = PromoCodeGenerateForm()
+    return render(request, 'promo_generate.html', {
+        'form': form,
+        'generated_codes': generated_codes,
         'active_menu': 'pricing',
     })
 

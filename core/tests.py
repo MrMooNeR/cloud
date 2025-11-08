@@ -1,11 +1,12 @@
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import DropFile
+from .models import DropFile, PromoCode, PromoRedemption
 
 
 class DropFileTests(TestCase):
@@ -43,3 +44,36 @@ class DropFileTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
         self.assertFalse(DropFile.objects.filter(pk=obj.pk).exists())
+
+
+class PricingViewTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            email="test@example.com", password="strong-pass"
+        )
+
+    def test_discount_context_is_exposed(self):
+        promo = PromoCode.objects.create(
+            code="SAVE25",
+            discount_percent=25,
+        )
+        PromoRedemption.objects.create(
+            promo=promo,
+            user=self.user,
+            discount_percent=25,
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("pricing"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["standard_price"], 299)
+        self.assertEqual(response.context["premium_price"], 899)
+        self.assertEqual(response.context["discounted_standard_price"], 224)
+        self.assertEqual(response.context["discounted_premium_price"], 674)
+
+        info = response.context["discount_info"]
+        self.assertIsNotNone(info)
+        self.assertEqual(info["percent"], 25)
+        self.assertEqual(info["standard_price"], 224)
+        self.assertEqual(info["premium_price"], 674)
