@@ -3,13 +3,17 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from django.shortcuts import render, redirect
 from django.http import FileResponse, Http404, JsonResponse
+from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
-from .models import File
+from .models import DropFile, File
 from .forms import UploadForm
-from .utils import require_subscription
+from .utils import cleanup_expired_dropfiles, require_subscription
 
+
+@ensure_csrf_cookie
 def home(request):
     if request.user.is_authenticated:
         return redirect('files')
@@ -65,6 +69,7 @@ def download(request, pk: int):
     resp = FileResponse(obj.file.open("rb"), as_attachment=True, filename=obj.name)
     return resp
 
+
 @login_required
 def trash(request):
     qs = File.objects.filter(owner=request.user, is_deleted=True).order_by('-deleted_at')
@@ -93,6 +98,47 @@ def delete_file(request, pk: int):
     obj.deleted_at = timezone.now()
     obj.save(update_fields=["is_deleted", "deleted_at"])
     return JsonResponse({"status": "ok"})
+
+
+@require_POST
+def drop_upload(request):
+    cleanup_expired_dropfiles()
+    uploaded = request.FILES.get("file")
+    if not uploaded:
+        return JsonResponse({"error": "Файл не найден"}, status=400)
+    obj = DropFile(
+        file=uploaded,
+        name=getattr(uploaded, "name", ""),
+        size=getattr(uploaded, "size", 0),
+        content_type=getattr(uploaded, "content_type", "") or "",
+    )
+    obj.save()
+    download_url = request.build_absolute_uri(reverse('drop_download', args=[obj.token]))
+    return JsonResponse({
+        "url": download_url,
+        "expires_at": obj.expires_at.isoformat(),
+        "name": obj.name,
+        "size": obj.size,
+    })
+
+
+def drop_download(request, token):
+    cleanup_expired_dropfiles()
+    try:
+        obj = DropFile.objects.get(token=token)
+    except DropFile.DoesNotExist:
+        raise Http404("Ссылка не найдена")
+    if obj.is_expired:
+        obj.delete()
+        raise Http404("Ссылка устарела")
+    response = FileResponse(
+        obj.file.open("rb"),
+        as_attachment=True,
+        filename=obj.name or obj.file.name,
+    )
+    if obj.content_type:
+        response["Content-Type"] = obj.content_type
+    return response
 
 
 @login_required

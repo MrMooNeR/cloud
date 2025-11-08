@@ -70,12 +70,131 @@
     margin-bottom: 6px;
   }
 
+  .dropmefiles {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .drop-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .drop-card h2 {
+    font-size: 24px;
+    margin: 0;
+  }
+
+  .drop-description {
+    color: #9aa4b2;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .dropzone {
+    border: 2px dashed var(--line);
+    border-radius: 14px;
+    padding: 32px;
+    text-align: center;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+  }
+
+  .dropzone:hover,
+  .dropzone.dragover {
+    border-color: var(--accent);
+    background: rgba(56, 189, 248, 0.05);
+  }
+
+  .dropzone.loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .dropzone strong {
+    font-size: 18px;
+  }
+
+  .drop-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .drop-status {
+    font-size: 14px;
+    color: #9aa4b2;
+    margin: 0;
+  }
+
+  .drop-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    word-break: break-word;
+    font-size: 15px;
+    background: rgba(56, 189, 248, 0.08);
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+  }
+
+  .drop-result a {
+    color: #38bdf8;
+    text-decoration: none;
+    word-break: break-all;
+    flex: 1 1 auto;
+  }
+
+  .drop-result button {
+    flex: 0 0 auto;
+  }
+
+  .drop-copy-btn {
+    background: rgba(56, 189, 248, 0.18);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #e2f4ff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    transition: background 0.2s ease;
+  }
+
+  .drop-copy-btn:hover {
+    background: rgba(56, 189, 248, 0.3);
+  }
+
+  .drop-note {
+    color: #9aa4b2;
+    font-size: 13px;
+    margin-top: 8px;
+  }
+
   @media (max-width: 900px) {
     .home-wrap {
       grid-template-columns: 1fr;
     }
     .hero {
       order: 2;
+    }
+    .dropmefiles {
+      grid-template-columns: 1fr;
     }
   }
 </style>
@@ -112,5 +231,184 @@
     </div>
   </div>
 </div>
+
+<section class="dropmefiles">
+  <div class="drop-card">
+    <h2>FileDrop — делись в один жест</h2>
+    <p class="drop-description">
+      Перетащи сюда файл и мгновенно получи ссылку на скачивание. Мы сохраняем его 72 часа,
+      затем автоматически удаляем.
+    </p>
+    <p class="drop-description">
+      Удобно, когда нужно быстро передать архив коллеге, другу или себе самому на другое устройство.
+    </p>
+  </div>
+  <div class="drop-card">
+    <div id="dropzone" class="dropzone">
+      <strong>Перетащи файл сюда</strong>
+      <p class="drop-status" id="drop-status">или нажми, чтобы выбрать вручную</p>
+      <div class="drop-actions">
+        <button type="button" class="btn" id="drop-browse">Выбрать файл</button>
+        <input type="file" id="drop-input" hidden>
+      </div>
+      <div id="drop-result" class="drop-result" hidden></div>
+      <p class="drop-note" id="drop-note" hidden>Ссылка активна 72 часа.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function() {
+    const dropArea = document.getElementById('dropzone');
+    if (!dropArea) {
+      return;
+    }
+    const fileInput = document.getElementById('drop-input');
+    const browseBtn = document.getElementById('drop-browse');
+    const status = document.getElementById('drop-status');
+    const result = document.getElementById('drop-result');
+    const note = document.getElementById('drop-note');
+
+    const preventDefaults = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+      dropArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    ['dragenter', 'dragover'].forEach((eventName) => {
+      dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false);
+    });
+
+    ['dragleave', 'drop'].forEach((eventName) => {
+      dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false);
+    });
+
+    dropArea.addEventListener('drop', (event) => {
+      const files = event.dataTransfer.files;
+      if (files && files.length) {
+        uploadFile(files[0]);
+      }
+    });
+
+    dropArea.addEventListener('click', (event) => {
+      if (event.target === dropArea || event.target === status) {
+        fileInput.click();
+      }
+    });
+    browseBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (event) => {
+      if (event.target.files && event.target.files.length) {
+        uploadFile(event.target.files[0]);
+        event.target.value = '';
+      }
+    });
+
+    const uploadFile = async (file) => {
+      if (!file) {
+        return;
+      }
+      status.textContent = `Загружаем «${file.name}»…`;
+      dropArea.classList.add('loading');
+      result.hidden = true;
+      note.hidden = true;
+      try {
+        const payload = new FormData();
+        payload.append('file', file);
+        const response = await fetch('{% url "drop_upload" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken') || ''
+          },
+          body: payload
+        });
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+        const data = await response.json();
+        status.textContent = 'Готово! Скопируй ссылку ниже:';
+        renderResultLink(data.url);
+        result.hidden = false;
+        note.hidden = false;
+      } catch (error) {
+        console.error(error);
+        status.textContent = 'Не удалось загрузить файл. Попробуй ещё раз.';
+      } finally {
+        dropArea.classList.remove('loading');
+      }
+    };
+
+    const renderResultLink = (url) => {
+      result.innerHTML = '';
+      let displayUrl = url;
+      try {
+        const parsed = new URL(url);
+        displayUrl = `${parsed.origin}${parsed.pathname}`;
+      } catch (error) {
+        displayUrl = url.replace(/^https?:\/\//, '');
+      }
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = displayUrl;
+
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'drop-copy-btn';
+      copyBtn.textContent = 'Скопировать';
+      copyBtn.addEventListener('click', async (event) => {
+        event.stopPropagation();
+        const ok = await copyToClipboard(url);
+        copyBtn.textContent = ok ? 'Скопировано!' : 'Не вышло :(';
+        setTimeout(() => {
+          copyBtn.textContent = 'Скопировать';
+        }, 2000);
+      });
+
+      result.append(link, copyBtn);
+    };
+
+    const copyToClipboard = async (value) => {
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(value);
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+
+      const textarea = document.createElement('textarea');
+      textarea.value = value;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      let copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } catch (error) {
+        copied = false;
+      }
+      document.body.removeChild(textarea);
+      return copied;
+    };
+
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) {
+        return parts.pop().split(';').shift();
+      }
+      return null;
+    };
+  })();
+</script>
 
 {% endblock %}
