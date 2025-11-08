@@ -134,22 +134,22 @@
         <div class="plan good">Подписка активна</div>
       {% else %}
         <div class="plan bad">Нет подписки</div>
-        <a class="btn primary" href="#">Оформить</a>
+        <a class="btn primary" href="{% url 'pricing' %}">Оформить</a>
       {% endif %}
     </div>
 
     <nav class="menu">
-      <a class="menu-item active" href="{% url 'files' %}">Файлы</a>
+      <a class="menu-item {% if active_menu == 'files' %}active{% endif %}" href="{% url 'files' %}">Файлы</a>
       <a class="menu-item" href="#">Последние</a>
       <a class="menu-item" href="#">Альбомы</a>
       <a class="menu-item" href="#">Общий доступ</a>
-      <a class="menu-item" href="#">Корзина</a>
+       <a class="menu-item {% if active_menu == 'trash' %}active{% endif %}" href="{% url 'trash' %}">Корзина</a>
     </nav>
   </aside>
 
   <section class="board">
     <div class="board-top">
-      <h2>Недавние</h2>
+      <h2>{{ section_title|default:"Недавние" }}</h2>
       {% if user.is_subscribed %}
         <a class="btn primary" href="{% url 'upload' %}">Загрузить</a>
       {% else %}
@@ -158,13 +158,14 @@
     </div>
 
     {% if recent %}
-      <div class="grid" id="fileGrid">
+      <div class="grid" id="fileGrid" data-empty="Здесь появятся ваши файлы.">
         {% for f in recent %}
           <div class="tile"
                data-id="{{ f.pk }}"
                data-name="{{ f.name }}"
                data-view="{{ f.file.url }}"
                data-download="{% url 'download' f.pk %}"
+               data-delete="{% url 'file_delete' f.pk %}"
                data-kind="{% if f.is_image %}image{% elif f.is_video %}video{% elif f.is_pdf %}pdf{% else %}other{% endif %}">
             <div class="tile-thumb">
               {% if f.is_image %}
@@ -197,7 +198,7 @@
   <div class="ctx-item" data-action="copy">Копировать <span class="ctx-kbd">скоро</span></div>
   <div class="ctx-sep"></div>
   <div class="ctx-item" data-action="history" aria-disabled="true">История изменений</div>
-  <div class="ctx-item" data-action="delete">Удалить <span class="ctx-kbd">скоро</span></div>
+  <div class="ctx-item" data-action="delete">Удалить</div>
 </div>
 
 <script>
@@ -205,6 +206,30 @@
     const grid=document.getElementById('fileGrid');
     const menu=document.getElementById('ctxMenu');
     let current=null;
+
+    function getCsrfToken(){
+      const match=document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+      return match?decodeURIComponent(match[1]):'';
+    }
+
+    function pushToast(text,type='success'){
+      const wrap=document.getElementById('toasts');
+      if(!wrap) return;
+      const toast=document.createElement('div');
+      toast.className='toast'+(type==='error'?' error':' success');
+      toast.textContent=text;
+      wrap.appendChild(toast);
+      setTimeout(()=>toast.classList.add('fade-out'),2800);
+      setTimeout(()=>toast.remove(),3200);
+    }
+
+    function handleEmptyGrid(){
+      if(!grid) return;
+      if(grid.children.length===0){
+        const msg=grid.dataset.empty||'Здесь появятся ваши файлы.';
+        grid.innerHTML='<div class="tile muted">'+msg+'</div>';
+      }
+    }
 
     function hide(){menu.classList.remove('open');menu.setAttribute('aria-hidden','true');current=null}
     function show(x,y){
@@ -231,7 +256,27 @@
       const item=e.target.closest('.ctx-item');
       if(!item||item.getAttribute('aria-disabled')==='true'||!current) return;
       const action=item.dataset.action; const dl=current.dataset.download;
-      if(action==='download') location=dl; else alert('Функция «'+action+'» появится позже.');
+      if(action==='download'){
+        location=dl;
+        hide();
+        return;
+      }
+      if(action==='delete'){
+        const url=current.dataset.delete;
+        if(!url){hide();return;}
+        const tile=current;
+        fetch(url,{method:'POST',headers:{'X-CSRFToken':getCsrfToken()}})
+          .then(res=>{if(!res.ok) throw new Error('fail'); return res.json();})
+          .then(()=>{
+            tile.remove();
+            pushToast('Файл перемещён в корзину.');
+            handleEmptyGrid();
+          })
+          .catch(()=>pushToast('Не удалось удалить файл.','error'))
+          .finally(()=>hide());
+        return;
+      }
+      alert('Функция «'+action+'» появится позже.');
       hide();
     });
 

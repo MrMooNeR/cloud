@@ -92,6 +92,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'cloudstorage.urls'
 
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

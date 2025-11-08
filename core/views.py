@@ -2,7 +2,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from django.shortcuts import render, redirect
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, JsonResponse
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from .models import File
 from .forms import UploadForm
@@ -13,9 +15,14 @@ def home(request):
         return redirect('files')
     return render(request, 'home.html')
 
+def pricing(request):
+    return render(request, 'pricing.html', {
+        'active_menu': 'pricing',
+    })
+
 @login_required
 def files(request):
-    qs = File.objects.filter(owner=request.user).order_by('-uploaded_at')
+    qs = File.objects.filter(owner=request.user, is_deleted=False).order_by('-uploaded_at')
     used = qs.aggregate(s=Sum('size'))['s'] or 0
     quota = request.user.storage_quota
     percent = 0 if quota == 0 else min(int(used * 100 / quota), 100)
@@ -25,6 +32,7 @@ def files(request):
         'used': used,
         'quota': quota,
         'percent': percent,
+        'active_menu': 'files',
     })
 
 @login_required
@@ -51,8 +59,63 @@ def upload(request):
 @login_required
 def download(request, pk: int):
     try:
-        obj = File.objects.get(pk=pk, owner=request.user)
+        obj = File.objects.get(pk=pk, owner=request.user, is_deleted=False)
     except File.DoesNotExist:
         raise Http404("File not found")
     resp = FileResponse(obj.file.open("rb"), as_attachment=True, filename=obj.name)
     return resp
+
+@login_required
+def trash(request):
+    qs = File.objects.filter(owner=request.user, is_deleted=True).order_by('-deleted_at')
+    active_qs = File.objects.filter(owner=request.user, is_deleted=False)
+    used = active_qs.aggregate(s=Sum('size'))['s'] or 0
+    quota = request.user.storage_quota
+    percent = 0 if quota == 0 else min(int(used * 100 / quota), 100)
+    trashed = list(qs)
+    return render(request, 'trash.html', {
+        'items': trashed,
+        'used': used,
+        'quota': quota,
+        'percent': percent,
+        'active_menu': 'trash',
+    })
+
+
+@login_required
+@require_POST
+def delete_file(request, pk: int):
+    try:
+        obj = File.objects.get(pk=pk, owner=request.user, is_deleted=False)
+    except File.DoesNotExist:
+        raise Http404("File not found")
+    obj.is_deleted = True
+    obj.deleted_at = timezone.now()
+    obj.save(update_fields=["is_deleted", "deleted_at"])
+    return JsonResponse({"status": "ok"})
+
+
+@login_required
+@require_POST
+def restore_file(request, pk: int):
+    try:
+        obj = File.objects.get(pk=pk, owner=request.user, is_deleted=True)
+    except File.DoesNotExist:
+        raise Http404("File not found")
+    obj.is_deleted = False
+    obj.deleted_at = None
+    obj.save(update_fields=["is_deleted", "deleted_at"])
+    return JsonResponse({"status": "ok"})
+
+
+@login_required
+@require_POST
+def purge_file(request, pk: int):
+    try:
+        obj = File.objects.get(pk=pk, owner=request.user, is_deleted=True)
+    except File.DoesNotExist:
+        raise Http404("File not found")
+    if obj.file:
+        obj.file.delete(save=False)
+    obj.delete()
+    return JsonResponse({"status": "ok"})

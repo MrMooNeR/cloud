@@ -18,6 +18,8 @@ class File(models.Model):
     size = models.BigIntegerField(default=0)
     content_type = models.CharField(max_length=120, blank=True)
     uploaded_at = models.DateTimeField(default=timezone.now)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

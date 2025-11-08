@@ -48,8 +48,17 @@
 
     /* header */
     header{display:flex;justify-content:space-between;align-items:center;padding:12px 28px;border-bottom:1px solid var(--line)}
+    .topbar{display:flex;align-items:center;gap:28px}
     .brand a{color:var(--text);font-weight:800;letter-spacing:.2px;opacity:.92;transition:opacity .15s,transform .15s}
     .brand a:hover{opacity:1;transform:translateY(-.5px)}
+    .main-nav{display:flex;align-items:center;gap:18px;font-size:14px}
+    .main-nav a{color:var(--muted);font-weight:600;letter-spacing:.2px;transition:color .15s,opacity .15s}
+    .main-nav a:hover{color:var(--text)}
+    .main-nav a.active{color:var(--primary)}
+    @media (max-width:720px){
+      .topbar{gap:16px}
+      .main-nav{display:none}
+    }
     .top{display:flex;justify-content:space-between;gap:12px}
     .right{display:flex;align-items:center;gap:10px}
 
@@ -236,6 +245,12 @@
   <header class="top">
     <div class="container topbar">
       <div class="brand"><a href="{% url 'home' %}"><span class="logo"></span>CloudAnywhere</a></div>
+      <nav class="main-nav">
+        <a href="{% url 'pricing' %}" class="{% if active_menu == 'pricing' %}active{% endif %}">Тарифы</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'files' %}" class="{% if active_menu == 'files' %}active{% endif %}">Мои файлы</a>
+        {% endif %}
+      </nav>
     </div>
 
     <div class="right">

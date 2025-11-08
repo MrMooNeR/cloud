@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Тарифы — CloudAnywhere{% endblock %}
+{% block main_mod %}wide{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Подписка CloudAnywhere</h1>
+  <p class="lead">Выберите подходящий план и получите больше пространства, скорости и возможностей для вашей цифровой жизни.</p>
+</section>
+<section class="plans">
+  <article class="plan">
+    <p class="badge">Базовый минимум</p>
+    <h2>Free</h2>
+    <p class="summary">5 ГБ для ваших ежедневных задач. Отлично подходит, чтобы попробовать CloudAnywhere и хранить самые важные файлы.</p>
+    <ul>
+      <li>5 ГБ хранилища</li>
+      <li>Ограничение на загрузку: 250 МБ за файл</li>
+      <li>Общая поддержка по email</li>
+    </ul>
+    <button class="btn ghost" disabled>Текущий план</button>
+  </article>
+  <article class="plan highlight">
+    <p class="badge">Среднячок</p>
+    <h2>₽299<span>/мес</span></h2>
+    <p class="summary">Оптимальный баланс для активного использования. Подходит фрилансерам, студентам и небольшим командам.</p>
+    <ul>
+      <li>200 ГБ хранилища</li>
+      <li>Загрузка файлов до 5 ГБ</li>
+      <li>Приоритетная поддержка</li>
+      <li>Семейный доступ до 3 участников</li>
+    </ul>
+    <button class="btn primary">Выбрать план</button>
+  </article>
+  <article class="plan premium">
+    <p class="badge">Роскошный максимум</p>
+    <h2>₽899<span>/мес</span></h2>
+    <p class="summary">Для тех, кто работает с большими данными: творческие команды, стартапы и энтузиасты со смелыми проектами.</p>
+    <ul>
+      <li>2 ТБ хранилища</li>
+      <li>Неограниченный размер файлов</li>
+      <li>Круглосуточная поддержка с личным менеджером</li>
+      <li>История версий 180 дней</li>
+      <li>Совместная работа в реальном времени</li>
+    </ul>
+    <button class="btn outline">Связаться с нами</button>
+  </article>
+</section>
+<section class="faq">
+  <h3>Частые вопросы</h3>
+  <div class="faq-grid">
+    <div class="faq-item">
+      <h4>Можно ли сменить план позже?</h4>
+      <p>Да, вы можете переключаться между тарифами в любой момент. Мы мгновенно пересчитаем оставшиеся дни подписки.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Есть ли скидки при оплате за год?</h4>
+      <p>При оплате за 12 месяцев сразу вы получаете 15% скидку и бесплатный приоритет на ранний доступ к новым функциям.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Как работает семейный доступ?</h4>
+      <p>Вы можете пригласить участников по email и делиться папками или отдельными файлами. Каждому доступен свой приватный раздел.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<style>
+  main.wrap{max-width:1120px}
+  .hero{display:grid;gap:12px;margin-bottom:36px;text-align:center}
+  .hero h1{font-size:40px;font-weight:800;letter-spacing:-.02em}
+  .hero .lead{color:var(--muted);font-size:18px;max-width:640px;margin:0 auto}
+  .plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-bottom:48px}
+  .plan{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px 24px;box-shadow:var(--shadow);display:grid;gap:16px;position:relative;overflow:hidden}
+  .plan .badge{text-transform:uppercase;font-size:12px;letter-spacing:.18em;color:var(--muted)}
+  .plan h2{font-size:36px;font-weight:700;display:flex;align-items:flex-end;gap:6px}
+  .plan h2 span{font-size:16px;font-weight:500;color:var(--muted)}
+  .plan .summary{color:var(--muted);line-height:1.6}
+  .plan ul{list-style:none;display:grid;gap:8px;color:var(--text);font-size:15px;padding:0;margin:0}
+  .plan ul li{display:flex;align-items:center;gap:8px}
+  .plan ul li::before{content:'✓';color:var(--primary);font-weight:700}
+  .plan .btn{justify-self:flex-start;padding:10px 18px;border-radius:10px;font-weight:600;cursor:pointer}
+  .plan .btn.primary{background:var(--primary);color:var(--primary-contrast);border:none}
+  .plan .btn.ghost{background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--muted);cursor:default}
+  .plan .btn.outline{background:transparent;border:1px solid var(--primary);color:var(--primary)}
+  .plan.highlight{background:linear-gradient(160deg,rgba(59,130,246,.18),rgba(59,130,246,.05)),var(--card);border-color:color-mix(in srgb,var(--primary) 40%,var(--line));transform:translateY(-8px)}
+  .plan.highlight .badge{color:var(--primary)}
+  .plan.premium{background:linear-gradient(140deg,rgba(249,115,22,.12),rgba(59,130,246,.04)),var(--card);border-color:color-mix(in srgb,rgba(249,115,22,.6) 40%,var(--line))}
+  .faq{display:grid;gap:18px;margin-bottom:32px}
+  .faq h3{font-size:24px;font-weight:700}
+  .faq-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+  .faq-item{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;gap:8px}
+  .faq-item h4{font-size:18px}
+  .faq-item p{color:var(--muted);line-height:1.6}
+  @media(max-width:1024px){
+    .plans{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .plan.highlight{transform:none}
+    .faq-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media(max-width:720px){
+    .hero h1{font-size:32px}
+    .plans{grid-template-columns:1fr}
+    .faq-grid{grid-template-columns:1fr}
+  }
+</style>
+{% endblock %}
