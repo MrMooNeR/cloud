@@ -77,3 +77,73 @@ class PricingViewTests(TestCase):
         self.assertEqual(info["percent"], 25)
         self.assertEqual(info["standard_price"], 224)
         self.assertEqual(info["premium_price"], 674)
+
+
+class PromoCodeDeletionTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            email="delete@example.com", password="strong-pass"
+        )
+
+    def test_delete_promo_reverts_user_state(self):
+        initial_quota = self.user.storage_quota
+        promo = PromoCode.objects.create(
+            code="BONUS", extra_storage_bytes=1024, grant_subscription=True
+        )
+        PromoRedemption.objects.create(
+            promo=promo,
+            user=self.user,
+            extra_storage_bytes=1024,
+            granted_subscription=True,
+        )
+
+        promo.apply_to_user(self.user)
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_subscribed)
+        self.assertEqual(self.user.storage_quota, initial_quota + 1024)
+
+        promo_id = promo.pk
+        promo.delete()
+
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_subscribed)
+        self.assertEqual(self.user.storage_quota, initial_quota)
+        self.assertFalse(PromoCode.objects.filter(pk=promo_id).exists())
+        self.assertFalse(PromoRedemption.objects.filter(promo_id=promo_id).exists())
+
+    def test_delete_promo_preserves_other_benefits(self):
+        initial_quota = self.user.storage_quota
+        first = PromoCode.objects.create(
+            code="FIRST", extra_storage_bytes=1024, grant_subscription=True
+        )
+        second = PromoCode.objects.create(
+            code="SECOND", extra_storage_bytes=2048, grant_subscription=True
+        )
+        PromoRedemption.objects.create(
+            promo=first,
+            user=self.user,
+            extra_storage_bytes=1024,
+            granted_subscription=True,
+        )
+        PromoRedemption.objects.create(
+            promo=second,
+            user=self.user,
+            extra_storage_bytes=2048,
+            granted_subscription=True,
+        )
+
+        first.apply_to_user(self.user)
+        second.apply_to_user(self.user)
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_subscribed)
+        self.assertEqual(self.user.storage_quota, initial_quota + 1024 + 2048)
+
+        first_id = first.pk
+        first.delete()
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_subscribed)
+        self.assertEqual(self.user.storage_quota, initial_quota + 2048)
+        self.assertFalse(PromoRedemption.objects.filter(promo_id=first_id).exists())

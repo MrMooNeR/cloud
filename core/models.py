@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F
 from django.utils import timezone
 from datetime import timedelta
@@ -203,6 +203,38 @@ class PromoCode(models.Model):
     def __str__(self):
         return self.code
 
+    def revoke_effects(self):
+        redemptions = list(self.redemptions.select_related("user"))
+        if not redemptions:
+            return
+        redemption_ids = []
+        for redemption in redemptions:
+            redemption_ids.append(redemption.pk)
+            user = redemption.user
+            updates = []
+            if redemption.extra_storage_bytes:
+                new_quota = max(
+                    0, user.storage_quota - redemption.extra_storage_bytes
+                )
+                if new_quota != user.storage_quota:
+                    user.storage_quota = new_quota
+                    updates.append("storage_quota")
+            if redemption.granted_subscription:
+                has_other_subscription = user.promo_redemptions.exclude(
+                    promo=self
+                ).filter(granted_subscription=True).exists()
+                if not has_other_subscription and user.is_subscribed:
+                    user.is_subscribed = False
+                    updates.append("is_subscribed")
+            if updates:
+                user.save(update_fields=updates)
+        if redemption_ids:
+            self.redemptions.filter(pk__in=redemption_ids).delete()
+
+    def delete(self, using=None, keep_parents=False):
+        with transaction.atomic():
+            self.revoke_effects()
+            return super().delete(using=using, keep_parents=keep_parents)
 
 class PromoRedemption(models.Model):
     promo = models.ForeignKey(
