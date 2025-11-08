@@ -3,16 +3,119 @@
 {% block content %}
   <div class="card" style="max-width:560px">
     <h2>Загрузить файл</h2>
-    <form method="post" enctype="multipart/form-data" class="form" style="margin-top:12px;display:grid;gap:12px">
+    <form id="uploadForm" method="post" enctype="multipart/form-data" class="form" style="margin-top:12px;display:grid;gap:12px">
       {% csrf_token %}
       {{ form.non_field_errors }}
       {{ form.file.errors }}
-      {{ form.file }}
+      <div id="dropZone" class="drop-zone">
+        <div class="drop-zone__icon" aria-hidden="true">⬆️</div>
+        <div class="drop-zone__text">
+          <strong>Перетащите файл сюда</strong>
+          <span>или нажмите, чтобы выбрать вручную</span>
+        </div>
+        {{ form.file }}
+      </div>
+      <div id="fileInfo" class="muted" style="display:none"></div>
       <div style="display:flex;gap:10px">
         <a class="btn" href="{% url 'files' %}">Отмена</a>
         <button class="btn primary" type="submit">Загрузить</button>
       </div>
-      <p class="muted" style="font-size:13px">Только для пользователей с активной подпиской.</p>
+      <p class="muted" style="font-size:13px">Только для пользователей с активной подпиской. Поддерживается перетаскивание файла для мгновенной загрузки.</p>
     </form>
   </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    (function(){
+      const form = document.getElementById('uploadForm');
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = dropZone?.querySelector('input[type="file"]');
+      const fileInfo = document.getElementById('fileInfo');
+      if(!form || !dropZone || !fileInput) return;
+
+      // скрываем стандартный инпут, чтобы оставить доступность через label
+      fileInput.classList.add('drop-zone__input');
+
+      function formatBytes(bytes){
+        if(!bytes && bytes !== 0) return '';
+        const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
+        const i = Math.min(Math.floor(Math.log(bytes || 1) / Math.log(1024)), sizes.length - 1);
+        const value = bytes / Math.pow(1024, i);
+        return `${value.toFixed(value < 10 && i > 0 ? 1 : 0)} ${sizes[i]}`;
+      }
+
+      function showFile(file){
+        if(!file || !fileInfo) return;
+        fileInfo.style.display = 'block';
+        fileInfo.textContent = `${file.name} • ${formatBytes(file.size)}`;
+      }
+
+      dropZone.addEventListener('click', () => fileInput.click());
+
+      dropZone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropZone.classList.add('drop-zone--dragover');
+      });
+
+      ['dragleave', 'dragend', 'drop'].forEach((type) => {
+        dropZone.addEventListener(type, () => dropZone.classList.remove('drop-zone--dragover'));
+      });
+
+      dropZone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        const files = event.dataTransfer?.files;
+        if(!files || !files.length) return;
+        const file = files[0];
+        if(typeof DataTransfer === 'function'){
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          fileInput.files = dt.files;
+        }else{
+          try{ fileInput.files = files; }
+          catch(err){}
+        }
+        showFile(file);
+        if(typeof form.requestSubmit === 'function') form.requestSubmit();
+        else form.submit();
+      });
+
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files?.[0];
+        if(!file) return;
+        showFile(file);
+      });
+    })();
+  </script>
+
+  <style>
+    .drop-zone{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:28px 16px;
+      border:2px dashed var(--line);
+      border-radius:16px;
+      cursor:pointer;
+      transition:border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+      text-align:center;
+    }
+    .drop-zone__icon{font-size:26px}
+    .drop-zone__text{display:flex;flex-direction:column;gap:4px;font-size:15px;color:var(--muted)}
+    .drop-zone__text strong{color:var(--text);font-size:16px}
+    .drop-zone__input{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      cursor:pointer;
+    }
+    .drop-zone--dragover{
+      border-color:var(--primary);
+      background:color-mix(in srgb, var(--primary) 12%, transparent);
+      box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+    }
+  </style>
 {% endblock %}
