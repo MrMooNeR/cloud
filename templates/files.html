@@ -33,7 +33,9 @@
     align-items:center;
     font-size:13px;
   }
-  .usage-top .muted{font-size:12px}
+  .usage-top .muted{
+    font-size:12px;
+  }
   .bar{
     height:6px;
     background:#121722;
@@ -41,10 +43,23 @@
     border-radius:6px;
     overflow:hidden;
   }
-  html[data-theme="light"] .bar{background:#e9edf5}
-  .bar-fill{height:100%;background:var(--acc)}
-  .plan.good{color:#15803d;font-size:12px;margin-top:2px}
-  .plan.bad{ color:#b45309;font-size:12px;margin-top:2px}
+  html[data-theme="light"] .bar{
+    background:#e9edf5;
+  }
+  .bar-fill{
+    height:100%;
+    background:var(--acc);
+  }
+  .plan.good{
+    color:#15803d;
+    font-size:12px;
+    margin-top:2px;
+  }
+  .plan.bad{
+    color:#b45309;
+    font-size:12px;
+    margin-top:2px;
+  }
   .usage .btn.primary{
     width:100%;
     margin-top:6px;
@@ -62,7 +77,7 @@
     padding:6px 8px;
     display:flex;
     flex-direction:column;
-    gap:6px;                 /* управляем расстояниями здесь */
+    gap:6px;
   }
   .menu-item{
     padding:9px 10px;
@@ -71,16 +86,43 @@
     border:1px solid var(--line);
     background:var(--card);
   }
-  .menu-item:hover{outline:1px solid var(--line)}
+  .menu-item:hover{
+    outline:1px solid var(--line);
+  }
   .menu-item.active{
     border-color:var(--primary);
     box-shadow:0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
   }
 
   /* ---------- RIGHT: board + grid ---------- */
-  .board{display:flex;flex-direction:column;gap:16px}
-  .board-top{display:flex;justify-content:space-between;align-items:center}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+  .board{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .board-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .board-top h2{
+    font-size:20px;
+    margin:0;
+  }
+  .board-top .btn{
+    white-space:nowrap;
+    padding:7px 14px;
+    border-radius:8px;
+    font-size:13px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:18px;
+  }
 
   .tile{
     display:block;
@@ -89,35 +131,141 @@
     border-radius:16px;
     padding:12px;
     cursor:pointer;
+    transition:border-color .16s ease, box-shadow .16s ease, transform .12s ease;
   }
-  .tile:hover{border-color:#2b3240}
-  .tile-thumb{
-    position:relative;height:150px;
-    border:1px solid var(--line);
-    border-radius:12px;overflow:hidden;
-    display:grid;place-items:center;
-    background:#0f141d;
+  .tile:hover{
+    border-color:#2b3240;
+    box-shadow:0 4px 14px rgba(0,0,0,.22);
+    transform:translateY(-1px);
   }
-  html[data-theme="light"] .tile-thumb{background:#f2f5fa}
-  .tile-thumb img,.tile-thumb video{width:100%;height:100%;object-fit:cover;display:block}
-  .tile-thumb .badge{
-    font-weight:700;color:#8ab4f8;
-    border:1px dashed var(--line);
-    padding:6px 10px;border-radius:8px;
-    background:#0f141d;
-  }
-  html[data-theme="light"] .tile-thumb .badge{background:rgba(0,0,0,.06)}
-  .tile-name{margin-top:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tile-meta{font-size:12px;color:#9aa4b2}
 
-  /* ---------- Context menu ---------- */
-  .ctx{position:fixed;z-index:1000;display:none;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.3);padding:6px}
-  .ctx.open{display:block}
-  .ctx-item{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:var(--text);cursor:pointer}
-  .ctx-item:hover{background:rgba(127,127,127,.08)}
-  .ctx-item[aria-disabled="true"]{opacity:.5;cursor:default}
-  .ctx-sep{height:1px;background:var(--line);margin:6px 0}
-  .ctx-kbd{margin-left:auto;font-size:11px;color:#8b98a6}
+  .tile-thumb{
+    position:relative;
+    height:150px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+    display:grid;
+    place-items:center;
+    background:#0f141d;
+  }
+  html[data-theme="light"] .tile-thumb{
+    background:#f2f5fa;
+  }
+  .tile-thumb img,
+  .tile-thumb video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .tile-thumb .badge{
+    font-weight:700;
+    color:#8ab4f8;
+    border:1px dashed var(--line);
+    padding:6px 10px;
+    border-radius:8px;
+    background:#0f141d;
+  }
+  html[data-theme="light"] .tile-thumb .badge{
+    background:rgba(0,0,0,.06);
+  }
+
+  .tile-name{
+    margin-top:10px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tile-meta{
+    font-size:12px;
+    color:#9aa4b2;
+    margin-top:2px;
+  }
+
+  /* ---------- Context menu (стили приведены к той же визуальной системе) ---------- */
+  .ctx{
+    position:fixed;
+    z-index:1000;
+    display:none;
+    min-width:220px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:0 6px 18px rgba(0,0,0,.3);
+    padding:6px;
+  }
+  .ctx.open{
+    display:block;
+  }
+  .ctx-item{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    padding:10px 12px;
+    border-radius:8px;
+    color:var(--text);
+    cursor:pointer;
+    font-size:13px;
+  }
+  .ctx-item:hover{
+    background:rgba(127,127,127,.08);
+  }
+  .ctx-item[aria-disabled="true"]{
+    opacity:.5;
+    cursor:default;
+  }
+  .ctx-sep{
+    height:1px;
+    background:var(--line);
+    margin:6px 0;
+  }
+  .ctx-kbd{
+    margin-left:auto;
+    font-size:11px;
+    color:#8b98a6;
+  }
+
+  /* ---------- Mobile / tablet ---------- */
+  @media (max-width: 920px){
+    .files-layout{
+      grid-template-columns:1fr;
+    }
+    .usage,
+    .menu{
+      position:relative;
+    }
+    .board-top{
+      align-items:flex-start;
+    }
+    .board-top h2{
+      font-size:18px;
+    }
+    .grid{
+      grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+      gap:12px;
+    }
+    .tile{
+      padding:10px;
+      border-radius:14px;
+    }
+    .tile-thumb{
+      height:120px;
+      border-radius:10px;
+    }
+  }
+
+  @media (max-width: 540px){
+    .board-top{
+      flex-direction:column;
+      align-items:stretch;
+      gap:8px;
+    }
+    .board-top .btn{
+      width:100%;
+      text-align:center;
+    }
+  }
 </style>
 
 <div class="files-layout">
@@ -143,7 +291,7 @@
       <a class="menu-item" href="#">Последние</a>
       <a class="menu-item" href="#">Альбомы</a>
       <a class="menu-item" href="#">Общий доступ</a>
-       <a class="menu-item {% if active_menu == 'trash' %}active{% endif %}" href="{% url 'trash' %}">Корзина</a>
+      <a class="menu-item {% if active_menu == 'trash' %}active{% endif %}" href="{% url 'trash' %}">Корзина</a>
     </nav>
   </aside>
 
@@ -231,59 +379,94 @@
       }
     }
 
-    function hide(){menu.classList.remove('open');menu.setAttribute('aria-hidden','true');current=null}
+    function hide(){
+      menu.classList.remove('open');
+      menu.setAttribute('aria-hidden','true');
+      current=null;
+    }
+
     function show(x,y){
       menu.style.left=Math.min(x,innerWidth-menu.offsetWidth-8)+'px';
       menu.style.top=Math.min(y,innerHeight-menu.offsetHeight-8)+'px';
-      menu.classList.add('open');menu.setAttribute('aria-hidden','false');
+      menu.classList.add('open');
+      menu.setAttribute('aria-hidden','false');
     }
 
     if(grid){
       grid.addEventListener('click',e=>{
-        const tile=e.target.closest('.tile'); if(!tile) return;
-        const kind=tile.dataset.kind, view=tile.dataset.view, dl=tile.dataset.download;
+        const tile=e.target.closest('.tile');
+        if(!tile) return;
+        const kind=tile.dataset.kind;
+        const view=tile.dataset.view;
+        const dl=tile.dataset.download;
         const url=(kind==='image'||kind==='video'||kind==='pdf')?view:dl;
-        if(e.metaKey||e.ctrlKey) window.open(url,'_blank'); else location=url;
+        if(e.metaKey||e.ctrlKey){
+          window.open(url,'_blank');
+        }else{
+          location=url;
+        }
       });
 
       grid.addEventListener('contextmenu',e=>{
-        const tile=e.target.closest('.tile'); if(!tile) return;
-        e.preventDefault(); current=tile; show(e.clientX,e.clientY);
+        const tile=e.target.closest('.tile');
+        if(!tile) return;
+        e.preventDefault();
+        current=tile;
+        show(e.clientX,e.clientY);
       });
     }
 
     menu.addEventListener('click',e=>{
       const item=e.target.closest('.ctx-item');
       if(!item||item.getAttribute('aria-disabled')==='true'||!current) return;
-      const action=item.dataset.action; const dl=current.dataset.download;
+      const action=item.dataset.action;
+      const dl=current.dataset.download;
+
       if(action==='download'){
         location=dl;
         hide();
         return;
       }
+
       if(action==='delete'){
         const url=current.dataset.delete;
-        if(!url){hide();return;}
+        if(!url){
+          hide();
+          return;
+        }
         const tile=current;
-        fetch(url,{method:'POST',headers:{'X-CSRFToken':getCsrfToken()}})
-          .then(res=>{if(!res.ok) throw new Error('fail'); return res.json();})
+        fetch(url,{
+          method:'POST',
+          headers:{'X-CSRFToken':getCsrfToken()}
+        })
+          .then(res=>{
+            if(!res.ok) throw new Error('fail');
+            return res.json();
+          })
           .then(()=>{
             tile.remove();
             pushToast('Файл перемещён в корзину.');
             handleEmptyGrid();
           })
-          .catch(()=>pushToast('Не удалось удалить файл.','error'))
+          .catch(()=>{
+            pushToast('Не удалось удалить файл.','error');
+          })
           .finally(()=>hide());
         return;
       }
+
       alert('Функция «'+action+'» появится позже.');
       hide();
     });
 
-    addEventListener('click',e=>{ if(!menu.contains(e.target)) hide(); });
+    addEventListener('click',e=>{
+      if(!menu.contains(e.target)) hide();
+    });
     addEventListener('scroll',hide,true);
     addEventListener('resize',hide);
-    addEventListener('keydown',e=>{ if(e.key==='Escape') hide(); });
+    addEventListener('keydown',e=>{
+      if(e.key==='Escape') hide();
+    });
   })();
 </script>
 {% endblock %}

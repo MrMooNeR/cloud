@@ -24,13 +24,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-0&%wb0@t4a#9@bih6lobvl!n&h%15h^z88g8i@*nmd_jddpzz7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "dev.mrmooner.ru",
+    "mrmooner.ru",
+]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'var' / 'media'
 # Application definition
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://dev.mrmooner.ru",
+    "https://mrmooner.ru",
+]
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
